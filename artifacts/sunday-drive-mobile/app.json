@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Sunday Drive",
+    "slug": "sunday-drive-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/sunday-drive-mobile-icon.png",
+    "scheme": "sunday-drive-mobile",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/sunday-drive-mobile-icon.png",
+      "imageWidth": 120,
+      "resizeMode": "contain",
+      "backgroundColor": "#f6f4ef"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {},
+    "web": {
+      "favicon": "./assets/images/sunday-drive-mobile-icon.png",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
