@@ -19,8 +19,9 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+    <Stack screenOptions={{ headerShown: false, headerBackTitle: 'Back' }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="discovery" options={{ headerShown: false }} />
     </Stack>
   );
 }

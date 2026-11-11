@@ -21,10 +21,7 @@
       "favicon": "./assets/images/sunday-drive-mobile-icon.png",
       "output": "static"
     },
-    "plugins": [
-      "expo-router",
-      "@maplibre/maplibre-react-native"
-    ],
+    "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
