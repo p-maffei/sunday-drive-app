@@ -1,15 +1,19 @@
 # Sunday Drive Phase 1 Architecture
 
-**Status:** Planning recommendation; no providers are connected and no Phase 1 capabilities have been implemented.  
+**Status:** Planning recommendation; no providers are connected and no Phase 1 capabilities have been implemented.
 **Research checked:** November 11, 2026. Provider pricing and terms change; verify them again before choosing a plan or sending production traffic.
+
+## Phase 1 scope boundary
+
+Phase 1 is a native iOS and Android mobile app only. Do not build or extend a web version for Phase 1. The existing web artifact is an earlier prototype; leave it in place but outside this phase rather than deleting it.
 
 ## Executive recommendation
 
-Keep the existing web and native mobile apps, and make the shared Express API the only place that calls route, geocoding, and points-of-interest providers. Use the existing OpenAPI/Zod code-generation pattern for a typed contract shared by both clients.
+Use the existing Expo native app as the only Phase 1 client, and make the shared Express API the only place that calls route, geocoding, and points-of-interest providers. Use the existing OpenAPI/Zod code-generation pattern for a typed contract between the mobile app and API.
 
 For a first provider evaluation, compare:
 
-- **Map rendering:** MapLibre on both platforms, with a hosted vector-tile provider such as MapTiler. MapLibre is the renderer, not a source of map data. Keep visible map and data-source attribution.
+- **Map rendering:** MapLibre React Native for iOS and Android, with a hosted vector-tile provider such as MapTiler. MapLibre is the renderer, not a source of map data. Keep visible map and data-source attribution.
 - **Routing:** Test GraphHopper first because its API documents custom route models, alternative routes, and round trips. Benchmark it against Mapbox Directions before choosing: Mapbox offers traffic-aware driving and up to two alternatives, but alternatives are not guaranteed to be distinctive.
 - **Location search and POIs:** Evaluate Geoapify as a single geocoding/POI candidate. Its Places API is based on OpenStreetMap data, offers broad categories, and documents storage of results; confirm the applicable plan and attribution.
 - **Scenic and elevation signals:** Use Caltrans’ scenic-highway layer as one limited, named signal—not as a claim that all scenic roads are covered. Prototype elevation sampling against USGS 3DEP/EPQS. Do not score live traffic until a traffic source, SoCal coverage, terms, and cost are confirmed.
@@ -18,7 +22,7 @@ These are candidates for a small technical evaluation, not approved purchases. S
 
 ## What exists today
 
-- The web app and Expo native app are separate clients with a common Sunday Drive visual identity.
+- The workspace contains an earlier web prototype and an Expo native app. Only the native iOS and Android app is in Phase 1 scope.
 - The Express API currently exposes only a health check.
 - The database schema has no application tables.
 - The mobile form and map are previews: there is no real geocoding, routing, POI data, or persistence.
@@ -29,18 +33,17 @@ The user-facing interface should continue to label preview-only parts clearly. D
 ## Proposed system shape
 
 ```text
-Sunday Drive web app ─┐
-                      ├─ generated typed API client ─ Express API
-Sunday Drive mobile ──┘                           ├─ location provider adapter
-                                                  ├─ route provider adapter
-                                                  ├─ candidate selection + scoring
-                                                  ├─ POI provider adapter
-                                                  └─ scenic/elevation data adapters
+Sunday Drive mobile app ─ generated typed API client ─ Express API
+                                                     ├─ location provider adapter
+                                                     ├─ route provider adapter
+                                                     ├─ candidate selection + scoring
+                                                     ├─ POI provider adapter
+                                                     └─ scenic/elevation data adapters
 ```
 
-The browser and mobile app should own presentation and temporary interaction state: form values, selected route, visible POI categories, and added or removed stops. They should not contain provider secrets or provider-specific route logic.
+The mobile app should own presentation and temporary interaction state: form values, selected route, visible POI categories, and added or removed stops. It should not contain provider secrets or provider-specific route logic.
 
-The API should validate requests at its boundary, call provider adapters, normalize provider responses into Sunday Drive's own types, and return one consistent response to both clients. Keep the scoring rules independent of any provider so they can be unit tested and improved without changing map or API code.
+The API should validate requests at its boundary, call provider adapters, and normalize provider responses into Sunday Drive's own types before returning them to the mobile app. Keep scoring rules independent of any provider so they can be unit tested and improved without changing map or API code.
 
 ### Suggested backend modules
 
@@ -110,8 +113,7 @@ Route alternatives from providers are usually alternatives to a fastest or gener
 
 | Capability | Candidate | Strengths for Sunday Drive | Limits and cost/terms to check |
 |---|---|---|---|
-| Web map | MapLibre GL JS + hosted vector tiles such as MapTiler | Open renderer that supports the preferred MapLibre direction; can draw route GeoJSON and POI layers. MapTiler documents MapLibre use. | MapLibre does not include tiles. MapTiler’s free plan is described for testing, proof-of-concept, personal, or non-commercial use; commercial plans and request quotas need review. Display required attribution. Estimate map loads and tile requests before projecting cost. |
-| Native map | MapLibre React Native + the same style/data provider | Native iOS and Android rendering, keeping the MapLibre approach across clients. | The official Expo setup says it cannot run in Expo Go; it requires native configuration and a development build. This changes the current quick-preview workflow and should be tested before committing. |
+| Native mobile map | MapLibre React Native + hosted vector tiles such as MapTiler | Native iOS and Android rendering; draws route GeoJSON and POI layers while honoring the MapLibre preference. | MapLibre does not include tiles. The official Expo setup says it cannot run in Expo Go; it requires native configuration and a development build. MapTiler’s free plan is described for testing, proof-of-concept, personal, or non-commercial use; commercial plans and request quotas need review. Display required attribution and test the development build early. |
 | Routing lead | GraphHopper Directions API | OpenStreetMap-based coverage; supports per-request custom models, alternative routes, round trips, geometry, and optional elevation. Its alternative-route mode is explicitly intended to return routes that are not too similar. | Credit-based pricing. Current docs describe an extra credit for alternatives and a multiplier for round-trip requests; calculate cost from the actual request design and plan. Custom models are flexible but do not themselves guarantee a “scenic” route. Confirm response fields, SoCal road coverage, and commercial terms in a prototype. |
 | Routing benchmark | Mapbox Directions API | Supports driving and traffic-aware driving; up to two alternatives may be returned. Traffic profile includes current and historic traffic where supported. | Alternatives may not exist and are described as significantly different but still close in time. Pricing is usage-based and differs by product. Confirm SoCal traffic coverage, account limits, and whether returned data may be shown/cached with a MapLibre-rendered map under current terms. |
 | Routing alternative | Google Routes API | Can return up to three alternatives in addition to the default route; strong place and directions ecosystem. | Alternatives are only available without intermediate waypoints. Routes and Places use separate pay-as-you-go SKUs; the current global pricing table lists Routes Essentials with a 10,000-event free cap and a starting tier at $5 per 1,000 events, while traffic-aware Pro features have a different SKU and price. Google map rendering adds separate considerations; review current display, caching, and attribution requirements before combining Google content with MapLibre. |
@@ -128,7 +130,7 @@ Pricing models above are not a project cost estimate. Before choosing a paid tie
 
 The requirements ask for saved vehicle profiles in Phase 1 but defer accounts to Phase 2. Recommended compromise:
 
-- Keep a small local collection of vehicle profiles on each device/browser for Phase 1.
+- Keep a small local collection of vehicle profiles on the user's iOS or Android device for Phase 1.
 - Support year, make, model, optional trim/nickname/photo, editing, deletion, and selecting one vehicle for a request.
 - Explain that profiles are local to that device and will not sync.
 - Do not send vehicle details to a route provider or claim they affect recommendations until the product defines vehicle-sensitive routing rules.
@@ -152,11 +154,11 @@ Do not persist route/POI provider content until the chosen provider's caching an
 
 ## Beginner-friendly implementation sequence
 
-1. **Provider and map spike:** On the web, show a real MapLibre map with a hosted tile style, attribution, and one real geocoded point. Separately build a tiny server-side routing comparison for a few known Southern California journeys using GraphHopper and Mapbox; record candidate count, route differences, available metadata, response time, and cost per user action. No production claims.
-2. **One real route end-to-end:** Pick one routing provider, submit a real origin/destination from the app through the API, and draw the returned route on the map. Include loading, no-route, provider failure, and unsupported-area states.
+1. **Native map and provider spike:** First verify a MapLibre React Native development build on iOS and Android, then show a real map, hosted tile style, attribution, and one real geocoded point. Separately build a small server-side routing comparison for known Southern California journeys using GraphHopper and Mapbox; record candidate count, route differences, available metadata, response time, and cost per user action. No production claims.
+2. **One real mobile route end-to-end:** Pick one routing provider, submit a real origin/destination from the native app through the API, and draw the returned route on the native map. Include loading, no-route, provider failure, and unsupported-area states.
 3. **Route alternatives and scoring:** Add multiple preferences, candidate normalization/diversity filtering, and independently tested score weighting. Use fixtures for cases such as “urban cruise should not be penalized for low curvature” and “missing traffic is unavailable, not zero.”
 4. **POIs and stops:** Add category filters, real place descriptions, detour estimates, and route recalculation when stops change.
-5. **Vehicle profiles and native map:** Add local profile storage and vehicle selection. Then add the native MapLibre development build, verifying iOS and Android rather than relying on Expo Go.
+5. **Vehicle profiles:** Add local profile storage on iOS and Android and vehicle selection. Keep profiles device-local and explain that they do not sync until the account phase.
 6. **Regional scoring signals:** Add Caltrans scenic-highway overlap and USGS elevation only after data freshness, attribution, performance, and scoring behavior are validated. Integrate traffic only after provider selection and cost checks.
 
 For each increment, keep the app explicit about which data is live, which factors are unavailable, and which features are not yet implemented.
