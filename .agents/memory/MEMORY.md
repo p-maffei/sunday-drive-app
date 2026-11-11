@@ -1,0 +1,1 @@
+- [Sunday Drive learning goals](sunday-drive-learning-goals.md) — keep this project beginner-friendly and explain the software concepts as it grows.
