@@ -3,8 +3,8 @@ name: Sunday Drive Phase 1 scope
 description: The platform scope for Sunday Drive's first product phase.
 ---
 
-Phase 1 is a native iOS and Android mobile app only. Do not build or extend a web version for Phase 1. Keep the existing web prototype in place but outside this phase.
+Phase 1's user-facing route-planning experience is native iOS and Android only. Keep the existing web app, and design the shared API so it can use the same route generation and scoring logic; do not build a separate web route-planning experience in Phase 1.
 
-**Why:** The user explicitly said Sunday Drive Phase 1 should only be a mobile app.
+**Why:** The user specified a mobile-only Phase 1, then asked for the existing web app to reuse the same route and scoring services.
 
-**How to apply:** Scope Phase 1 interface, map, implementation, and validation work to the Expo iOS/Android app. Do not delete the existing web prototype unless the user asks.
+**How to apply:** Implement and validate Phase 1 screens on the Expo iOS/Android app. Keep route generation and scoring in the shared API/domain layer so the React web app can call the same contract later. Do not delete the existing web app.

@@ -1,2 +1,2 @@
 - [Sunday Drive learning goals](sunday-drive-learning-goals.md) — keep this project beginner-friendly and explain the software concepts as it grows.
-- [Sunday Drive Phase 1 scope](sunday-drive-phase-1-scope.md) — Phase 1 is a native iOS/Android app only; leave the web prototype out of scope.
+- [Sunday Drive Phase 1 scope](sunday-drive-phase-1-scope.md) — Mobile-only UI, with shared route services designed for the existing web app to reuse.
