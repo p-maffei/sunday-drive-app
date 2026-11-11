@@ -3,7 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DriveRequestForm from '@/components/DriveRequestForm';
-import MapPreview from '@/components/MapPreview';
+import InteractiveMap from '@/components/InteractiveMap';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { useColors } from '@/hooks/useColors';
 
@@ -172,7 +172,7 @@ export default function HomeScreen() {
           escape to a whole day off course.
         </Text>
 
-        <MapPreview />
+        <InteractiveMap />
 
         <View style={styles.sectionHeading}>
           <Text style={styles.sectionTitle}>Plan a drive</Text>
