@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Map as MapLibreMap, NavigationControl } from 'maplibre-gl';
+import {
+  Map as MapLibreMap,
+  NavigationControl,
+  setWorkerUrl,
+} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useColors } from '@/hooks/useColors';
 import {
@@ -39,6 +43,12 @@ export default function InteractiveMap() {
 
   useEffect(() => {
     if (!mapElement.current) return;
+
+    // Expo's browser bundler does not emit MapLibre's worker file next to the
+    // app bundle, so this preview loads the matching pinned worker from CDN.
+    setWorkerUrl(
+      'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl-worker.mjs',
+    );
 
     const map = new MapLibreMap({
       container: mapElement.current,
