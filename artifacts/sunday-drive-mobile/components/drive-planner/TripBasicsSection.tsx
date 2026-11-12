@@ -43,7 +43,7 @@ export default function TripBasicsSection({
     label: {
       color: designTokens.color.mutedForeground,
       fontFamily: displayFontFamily,
-      fontSize: 9,
+      fontSize: 10,
       letterSpacing: 1,
     },
     input: {
@@ -63,6 +63,8 @@ export default function TripBasicsSection({
       fontFamily: interfaceFontFamily,
       fontSize: 12,
       lineHeight: 17,
+      flexShrink: 1,
+      textAlign: 'right',
     },
     toggles: { gap: 10, paddingTop: 2 },
     toggle: {
@@ -82,6 +84,7 @@ export default function TripBasicsSection({
     },
     toggleLabel: {
       flex: 1,
+      flexShrink: 1,
       color: designTokens.color.foreground,
       fontFamily: interfaceFontFamily,
       fontSize: 14,
@@ -89,6 +92,8 @@ export default function TripBasicsSection({
     },
     durationRow: {
       minHeight: 48,
+      flexWrap: 'wrap',
+      gap: 8,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',

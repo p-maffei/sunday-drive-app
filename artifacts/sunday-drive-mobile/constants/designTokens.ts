@@ -45,12 +45,19 @@ export const designTokens = {
   },
 } as const;
 
-export const interfaceFontFamily =
-  Platform.select({
-    ios: designTokens.typography.interface,
-    android: designTokens.typography.interfaceFallback,
-    web: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-    default: designTokens.typography.interfaceFallback,
-  }) ?? designTokens.typography.interfaceFallback;
+export function getInterfaceFontFamily(platform: typeof Platform.OS): string {
+  switch (platform) {
+    case 'ios':
+      return designTokens.typography.interface;
+    case 'android':
+      return designTokens.typography.interfaceFallback;
+    case 'web':
+      return '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    default:
+      return designTokens.typography.interfaceFallback;
+  }
+}
+
+export const interfaceFontFamily = getInterfaceFontFamily(Platform.OS);
 
 export const displayFontFamily = designTokens.typography.display;

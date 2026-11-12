@@ -84,7 +84,7 @@ export default function DrivePlannerScreen() {
     brandName: {
       color: designTokens.color.foreground,
       fontFamily: displayFontFamily,
-      fontSize: 9,
+      fontSize: 10,
       letterSpacing: 1.7,
     },
     brandSubtitle: {
@@ -98,7 +98,7 @@ export default function DrivePlannerScreen() {
       marginBottom: 10,
       color: designTokens.color.accent,
       fontFamily: displayFontFamily,
-      fontSize: 9,
+      fontSize: 10,
       letterSpacing: 1.2,
     },
     title: {
@@ -135,7 +135,7 @@ export default function DrivePlannerScreen() {
     sectionIndex: {
       color: designTokens.color.mutedForeground,
       fontFamily: displayFontFamily,
-      fontSize: 8,
+      fontSize: 9,
       letterSpacing: 0.8,
     },
     error: {
