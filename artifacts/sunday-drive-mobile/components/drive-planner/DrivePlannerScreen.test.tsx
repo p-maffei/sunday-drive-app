@@ -4,9 +4,26 @@ import { useRouter } from 'expo-router';
 import DrivePlannerScreen from './DrivePlannerScreen';
 
 const mockRouter = { push: jest.fn() };
+const mockSuggestion = {
+  id: 'place-1',
+  label: 'Pasadena, California',
+  title: 'Pasadena',
+  context: 'California',
+  latitude: 34.1478,
+  longitude: -118.1445,
+};
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
+}));
+
+jest.mock('@workspace/api-client-react', () => ({
+  useGetGeocodingSuggestions: ({ q }: { q: string }) => ({
+    data: q ? { suggestions: [mockSuggestion] } : undefined,
+    isFetching: false,
+    isError: false,
+  }),
+  setBaseUrl: jest.fn(),
 }));
 
 jest.mock('@expo-google-fonts/michroma', () => ({
@@ -45,7 +62,7 @@ describe('drive planner behavior', () => {
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 
     expect((await screen.getByTestId('error-drive-form')).props.children).toBe(
-      'Add a starting location to continue.',
+      'Choose a starting location from the suggestions.',
     );
     expect(mockRouter.push).not.toHaveBeenCalled();
   });
@@ -119,12 +136,16 @@ describe('drive planner behavior', () => {
     });
   });
 
-  it('routes to discovery after a starting location is provided', async () => {
+  it('routes to discovery after a starting location is selected', async () => {
     const screen = await render(<DrivePlannerScreen />);
 
+    await fireEvent(await screen.getByTestId('input-start-location'), 'focus');
     await fireEvent.changeText(
       await screen.getByTestId('input-start-location'),
       'Pasadena, CA',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-start-location-suggestion-place-1'),
     );
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 

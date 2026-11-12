@@ -12,6 +12,15 @@ export const ROUTE_PREFERENCES = [
 
 export type RoutePreference = (typeof ROUTE_PREFERENCES)[number];
 
+export interface GeocodedLocation {
+  id: string;
+  label: string;
+  title: string;
+  context: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface Vehicle {
   id: string;
   year: string;

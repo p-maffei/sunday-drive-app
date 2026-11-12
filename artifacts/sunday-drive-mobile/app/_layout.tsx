@@ -13,9 +13,18 @@ import { DMMono_400Regular } from '@expo-google-fonts/dm-mono';
 import { PlayfairDisplay_500Medium } from '@expo-google-fonts/playfair-display';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { setBaseUrl } from '@workspace/api-client-react';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient();
+setBaseUrl(
+  process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : null,
+);
 
 function RootLayoutNav() {
   return (
@@ -49,7 +58,9 @@ export default function RootLayout() {
       <ErrorBoundary>
         <GestureHandlerRootView>
           <KeyboardProvider>
-            <RootLayoutNav />
+            <QueryClientProvider client={queryClient}>
+              <RootLayoutNav />
+            </QueryClientProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
       </ErrorBoundary>

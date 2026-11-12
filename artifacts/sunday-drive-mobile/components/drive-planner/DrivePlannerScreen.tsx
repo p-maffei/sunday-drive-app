@@ -21,7 +21,12 @@ import RoutePreferencesSection from './RoutePreferencesSection';
 import ScoreExplanation from './ScoreExplanation';
 import TripBasicsSection from './TripBasicsSection';
 import VehicleProfileSection from './VehicleProfileSection';
-import type { RoutePreference, Vehicle, VehicleDraft } from './types';
+import type {
+  GeocodedLocation,
+  RoutePreference,
+  Vehicle,
+  VehicleDraft,
+} from './types';
 
 const EMPTY_VEHICLE_DRAFT: VehicleDraft = {
   year: '',
@@ -43,9 +48,14 @@ export default function DrivePlannerScreen() {
 
   const [start, setStart] = useState('');
   const [destination, setDestination] = useState('');
+  const [startLocation, setStartLocation] = useState<GeocodedLocation | null>(
+    null,
+  );
+  const [destinationLocation, setDestinationLocation] =
+    useState<GeocodedLocation | null>(null);
   const [roundTrip, setRoundTrip] = useState(false);
   const [anywhere, setAnywhere] = useState(false);
-  const [duration, setDuration] = useState(2);
+  const [durationMinutes, setDurationMinutes] = useState(120);
   const [preferences, setPreferences] = useState<RoutePreference[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
@@ -221,8 +231,8 @@ export default function DrivePlannerScreen() {
   }
 
   function submitDrive() {
-    if (!start.trim()) {
-      setFormError('Add a starting location to continue.');
+    if (!startLocation) {
+      setFormError('Choose a starting location from the suggestions.');
       return;
     }
 
@@ -272,18 +282,36 @@ export default function DrivePlannerScreen() {
             destination={destination}
             roundTrip={roundTrip}
             anywhere={anywhere}
-            duration={duration}
+            durationMinutes={durationMinutes}
+            startLocation={startLocation}
+            destinationLocation={destinationLocation}
             onStartChange={(value) => {
               setStart(value);
+              setStartLocation(null);
               setFormError('');
             }}
-            onDestinationChange={setDestination}
+            onDestinationChange={(value) => {
+              setDestination(value);
+              setDestinationLocation(null);
+            }}
+            onStartSelect={(location) => {
+              setStart(location.label);
+              setStartLocation(location);
+              setFormError('');
+            }}
+            onDestinationSelect={(location) => {
+              setDestination(location.label);
+              setDestinationLocation(location);
+            }}
             onRoundTripChange={setRoundTrip}
             onAnywhereChange={(value) => {
               setAnywhere(value);
-              if (value) setDestination('');
+              if (value) {
+                setDestination('');
+                setDestinationLocation(null);
+              }
             }}
-            onDurationChange={setDuration}
+            onDurationChange={setDurationMinutes}
           />
         </View>
 

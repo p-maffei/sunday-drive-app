@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: geocoding
+    description: Location search operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /geocoding/suggestions:
+    get:
+      operationId: getGeocodingSuggestions
+      tags: [geocoding]
+      summary: Search for real-world locations
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Location name or address to search for
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 120
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 6
+            default: 6
+      responses:
+        "200":
+          description: Matching real locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodingSuggestionsResponse"
+        "400":
+          description: Search query is invalid
+        "502":
+          description: Geocoding provider could not return results
+        "503":
+          description: Geocoding provider is not configured
 components:
   schemas:
     HealthStatus:
@@ -33,4 +70,35 @@ components:
           type: string
       required:
         - status
+    GeocodingSuggestion:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        title:
+          type: string
+        context:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - id
+        - label
+        - title
+        - context
+        - latitude
+        - longitude
+    GeocodingSuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeocodingSuggestion"
+      required:
+        - suggestions
 

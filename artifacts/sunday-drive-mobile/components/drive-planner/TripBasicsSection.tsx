@@ -3,7 +3,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -11,15 +10,22 @@ import {
   displayFontFamily,
   interfaceFontFamily,
 } from '@/constants/designTokens';
+import LocationAutocompleteField from './LocationAutocompleteField';
+import TripDurationSlider from './TripDurationSlider';
+import type { GeocodedLocation } from './types';
 
 interface TripBasicsSectionProps {
   start: string;
   destination: string;
   roundTrip: boolean;
   anywhere: boolean;
-  duration: number;
+  durationMinutes: number;
+  startLocation: GeocodedLocation | null;
+  destinationLocation: GeocodedLocation | null;
   onStartChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
+  onStartSelect: (location: GeocodedLocation) => void;
+  onDestinationSelect: (location: GeocodedLocation) => void;
   onRoundTripChange: (value: boolean) => void;
   onAnywhereChange: (value: boolean) => void;
   onDurationChange: (value: number) => void;
@@ -30,34 +36,25 @@ export default function TripBasicsSection({
   destination,
   roundTrip,
   anywhere,
-  duration,
+  durationMinutes,
+  startLocation,
+  destinationLocation,
   onStartChange,
   onDestinationChange,
+  onStartSelect,
+  onDestinationSelect,
   onRoundTripChange,
   onAnywhereChange,
   onDurationChange,
 }: TripBasicsSectionProps) {
   const styles = StyleSheet.create({
     section: { gap: 18 },
-    field: { gap: 7 },
     label: {
       color: designTokens.color.mutedForeground,
       fontFamily: displayFontFamily,
       fontSize: 10,
       letterSpacing: 1,
     },
-    input: {
-      minHeight: designTokens.component.inputHeight,
-      borderWidth: 1,
-      borderColor: designTokens.color.border,
-      borderRadius: designTokens.radius.small,
-      paddingHorizontal: designTokens.spacing.medium,
-      backgroundColor: designTokens.color.darkSurface,
-      color: designTokens.color.foreground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 15,
-    },
-    inputDisabled: { opacity: 0.45 },
     helper: {
       color: designTokens.color.mutedForeground,
       fontFamily: interfaceFontFamily,
@@ -89,37 +86,6 @@ export default function TripBasicsSection({
       fontFamily: interfaceFontFamily,
       fontSize: 14,
       fontWeight: '500',
-    },
-    durationRow: {
-      minHeight: 48,
-      flexWrap: 'wrap',
-      gap: 8,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    durationControls: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-    },
-    stepButton: {
-      width: 38,
-      height: 38,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: designTokens.color.border,
-      borderRadius: designTokens.radius.pill,
-      backgroundColor: designTokens.color.darkSurface,
-    },
-    disabledButton: { opacity: 0.4 },
-    durationValue: {
-      minWidth: 62,
-      color: designTokens.color.accent,
-      fontFamily: displayFontFamily,
-      fontSize: 12,
-      textAlign: 'center',
     },
   });
 
@@ -175,38 +141,29 @@ export default function TripBasicsSection({
 
   return (
     <View style={styles.section}>
-      <View style={styles.field}>
-        <Text style={styles.label}>01 / STARTING NEAR</Text>
-        <TextInput
-          value={start}
-          onChangeText={onStartChange}
-          placeholder="City, neighborhood, or ZIP"
-          placeholderTextColor={designTokens.color.mutedForeground}
-          autoCapitalize="words"
-          autoCorrect={false}
-          returnKeyType="next"
-          accessibilityLabel="Starting location"
-          style={styles.input}
-          testID="input-start-location"
-        />
-      </View>
+      <LocationAutocompleteField
+        label="01 / STARTING NEAR"
+        value={start}
+        placeholder="City, neighborhood, or ZIP"
+        accessibilityLabel="Starting location"
+        returnKeyType="next"
+        selectedLocation={startLocation}
+        testID="input-start-location"
+        onChangeText={onStartChange}
+        onSelect={onStartSelect}
+      />
 
-      <View style={styles.field}>
-        <Text style={styles.label}>02 / HEADED TOWARD · OPTIONAL</Text>
-        <TextInput
-          value={destination}
-          onChangeText={onDestinationChange}
-          placeholder={anywhere ? 'We’ll choose a destination' : 'Somewhere on the horizon'}
-          placeholderTextColor={designTokens.color.mutedForeground}
-          autoCapitalize="words"
-          autoCorrect={false}
-          returnKeyType="done"
-          editable={!anywhere}
-          accessibilityLabel="Optional destination"
-          style={[styles.input, anywhere && styles.inputDisabled]}
-          testID="input-destination"
-        />
-      </View>
+      <LocationAutocompleteField
+        label="02 / HEADED TOWARD · OPTIONAL"
+        value={destination}
+        placeholder={anywhere ? 'We’ll choose a destination' : 'Somewhere on the horizon'}
+        accessibilityLabel="Optional destination"
+        testID="input-destination"
+        disabled={anywhere}
+        selectedLocation={destinationLocation}
+        onChangeText={onDestinationChange}
+        onSelect={onDestinationSelect}
+      />
 
       <View style={styles.toggles}>
         {renderToggleRow({
@@ -225,42 +182,10 @@ export default function TripBasicsSection({
         })}
       </View>
 
-      <View style={styles.durationRow}>
-        <Text style={styles.label}>03 / TIME TO WANDER</Text>
-        <View style={styles.durationControls}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Decrease driving duration"
-            disabled={duration <= 1}
-            onPress={() => onDurationChange(duration - 1)}
-            style={[styles.stepButton, duration <= 1 && styles.disabledButton]}
-            testID="button-duration-decrease"
-          >
-            <Feather
-              name="minus"
-              size={16}
-              color={designTokens.color.foreground}
-            />
-          </Pressable>
-          <Text style={styles.durationValue} testID="text-drive-duration">
-            {duration} {duration === 1 ? 'hour' : 'hours'}
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Increase driving duration"
-            disabled={duration >= 6}
-            onPress={() => onDurationChange(duration + 1)}
-            style={[styles.stepButton, duration >= 6 && styles.disabledButton]}
-            testID="button-duration-increase"
-          >
-            <Feather
-              name="plus"
-              size={16}
-              color={designTokens.color.foreground}
-            />
-          </Pressable>
-        </View>
-      </View>
+      <TripDurationSlider
+        durationMinutes={durationMinutes}
+        onChange={onDurationChange}
+      />
     </View>
   );
 }
