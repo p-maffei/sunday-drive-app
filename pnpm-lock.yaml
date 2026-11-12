@@ -608,6 +608,9 @@ importers:
       '@expo-google-fonts/dm-sans':
         specifier: ^0.4.2
         version: 0.4.2
+      '@expo-google-fonts/michroma':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@expo-google-fonts/playfair-display':
         specifier: ^0.4.2
         version: 0.4.2
@@ -1233,6 +1236,9 @@ packages:
 
   '@expo-google-fonts/material-symbols@0.4.53':
     resolution: {integrity: sha512-SgCSm8rUYvwy+5ABvwlV/h7xbJkWAsenChSKlUwMLVyEw/QoUon055QixCOtGCjrSRWqFGDvR0ghVa5nA2OkIg==}
+
+  '@expo-google-fonts/michroma@0.4.2':
+    resolution: {integrity: sha512-Z5qNDpcZnDNFcX668OqaFFUZ0qrazi8BDrgjylE41RDbMY6S5qYjZsnggnaXUOidKl7V1Zqypb09XjNF0nbqBw==}
 
   '@expo-google-fonts/playfair-display@0.4.2':
     resolution: {integrity: sha512-mWhBV59RUjSS3aYpytUb7UyHHTnXcHh7epAn7gq+M4XAEh5PuMKUrP8eiUfkJLb6UwHZCi7EhQpUzxHu5OL96w==}
@@ -5909,6 +5915,8 @@ snapshots:
   '@expo-google-fonts/inter@0.4.2': {}
 
   '@expo-google-fonts/material-symbols@0.4.53': {}
+
+  '@expo-google-fonts/michroma@0.4.2': {}
 
   '@expo-google-fonts/playfair-display@0.4.2': {}
 
