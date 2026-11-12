@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
-    objectFit: 'contain',
+    objectFit: 'cover',
   },
   wordmark: {
     position: 'absolute',
@@ -112,7 +112,7 @@ export default function StartupSplash({
       <View style={styles.image}>
         <Image
           source={require('../assets/images/sunday-drive-loading.jpg')}
-          resizeMode="contain"
+          resizeMode="cover"
           style={styles.imageContent}
           accessible={false}
           testID="startup-splash-image"
