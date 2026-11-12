@@ -41,15 +41,13 @@ function toSuggestion(feature: GeoapifyFeature) {
   const title = properties.name || properties.address_line1 || properties.formatted;
   if (!title) return null;
 
-  const context = [
-    properties.address_line2,
-    properties.suburb,
-    properties.city,
-    properties.state,
-    properties.postcode,
-  ]
-    .filter((part, index, parts): part is string => Boolean(part) && parts.indexOf(part) === index)
-    .join(", ");
+  const context =
+    properties.address_line2 ||
+    [properties.suburb, properties.city, properties.state, properties.postcode]
+      .filter((part, index, parts): part is string =>
+        Boolean(part) && parts.indexOf(part) === index,
+      )
+      .join(", ");
 
   const id = properties.place_id || `${latitude},${longitude},${title}`;
 

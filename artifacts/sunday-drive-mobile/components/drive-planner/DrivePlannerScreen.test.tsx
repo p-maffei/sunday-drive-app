@@ -136,6 +136,27 @@ describe('drive planner behavior', () => {
     });
   });
 
+  it('keeps the optional destination compatible with Round trip and I’ll Go Anywhere', async () => {
+    const screen = await render(<DrivePlannerScreen />);
+    const destination = await screen.getByTestId('input-destination');
+
+    await fireEvent.changeText(destination, 'Santa Barbara');
+    await fireEvent.press(await screen.getByTestId('toggle-anywhere'));
+    expect((await screen.getByTestId('input-destination')).props.value).toBe('');
+    expect((await screen.getByTestId('input-destination')).props.editable).toBe(
+      false,
+    );
+
+    const roundTrip = await screen.getByTestId('toggle-round-trip');
+    await fireEvent.press(roundTrip);
+    expect(roundTrip.props.accessibilityState).toEqual({ checked: true });
+
+    await fireEvent.press(await screen.getByTestId('toggle-anywhere'));
+    expect((await screen.getByTestId('input-destination')).props.editable).toBe(
+      true,
+    );
+  });
+
   it('routes to discovery after a starting location is selected', async () => {
     const screen = await render(<DrivePlannerScreen />);
 
