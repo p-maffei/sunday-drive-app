@@ -8,10 +8,14 @@
     "scheme": "sunday-drive-mobile",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/sunday-drive-mobile-icon.png",
-      "imageWidth": 120,
+      "image": "./assets/images/sunday-drive-splash-wordmark.png",
+      "imageWidth": 360,
       "resizeMode": "contain",
-      "backgroundColor": "#f6f4ef"
+      "backgroundColor": "#202322",
+      "dark": {
+        "image": "./assets/images/sunday-drive-splash-wordmark.png",
+        "backgroundColor": "#202322"
+      }
     },
     "ios": {
       "supportsTablet": true
@@ -21,7 +25,22 @@
       "favicon": "./assets/images/sunday-drive-mobile-icon.png",
       "output": "static"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/sunday-drive-splash-wordmark.png",
+          "imageWidth": 360,
+          "resizeMode": "contain",
+          "backgroundColor": "#202322",
+          "dark": {
+            "image": "./assets/images/sunday-drive-splash-wordmark.png",
+            "backgroundColor": "#202322"
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
