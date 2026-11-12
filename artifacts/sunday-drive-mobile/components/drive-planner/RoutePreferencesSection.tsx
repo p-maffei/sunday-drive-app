@@ -1,6 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import {
+  designTokens,
+  interfaceFontFamily,
+} from '@/constants/designTokens';
 import { ROUTE_PREFERENCES, type RoutePreference } from './types';
 
 interface RoutePreferencesSectionProps {
@@ -12,8 +15,6 @@ export default function RoutePreferencesSection({
   selected,
   onToggle,
 }: RoutePreferencesSectionProps) {
-  const colors = useColors();
-
   const styles = StyleSheet.create({
     container: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     option: {
@@ -23,18 +24,19 @@ export default function RoutePreferencesSection({
       alignItems: 'center',
       gap: 7,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
-      backgroundColor: colors.card,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.pill,
+      backgroundColor: designTokens.color.darkSurface,
     },
     selected: {
-      borderColor: colors.primary,
-      backgroundColor: colors.secondary,
+      borderColor: designTokens.color.accent,
+      backgroundColor: designTokens.color.accent,
     },
     label: {
-      color: colors.foreground,
-      fontFamily: 'DMSans_500Medium',
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 12,
+      fontWeight: '500',
     },
   });
 
@@ -52,9 +54,20 @@ export default function RoutePreferencesSection({
             testID={`preference-${preference.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
           >
             {isSelected ? (
-              <Feather name="check" size={13} color={colors.primary} />
+              <Feather
+                name="check"
+                size={13}
+                color={designTokens.color.accentForeground}
+              />
             ) : null}
-            <Text style={styles.label}>{preference}</Text>
+            <Text
+              style={[
+                styles.label,
+                isSelected && { color: designTokens.color.accentForeground },
+              ]}
+            >
+              {preference}
+            </Text>
           </Pressable>
         );
       })}

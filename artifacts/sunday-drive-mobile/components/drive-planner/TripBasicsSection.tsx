@@ -6,7 +6,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import {
+  designTokens,
+  displayFontFamily,
+  interfaceFontFamily,
+} from '@/constants/designTokens';
 
 interface TripBasicsSectionProps {
   start: string;
@@ -33,30 +37,30 @@ export default function TripBasicsSection({
   onAnywhereChange,
   onDurationChange,
 }: TripBasicsSectionProps) {
-  const colors = useColors();
-
   const styles = StyleSheet.create({
     section: { gap: 18 },
     field: { gap: 7 },
     label: {
-      color: colors.foreground,
-      fontFamily: 'DMMono_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: displayFontFamily,
       fontSize: 9,
       letterSpacing: 1,
     },
     input: {
-      minHeight: 48,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingHorizontal: 2,
-      color: colors.foreground,
-      fontFamily: 'DMSans_400Regular',
+      minHeight: designTokens.component.inputHeight,
+      borderWidth: 1,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.small,
+      paddingHorizontal: designTokens.spacing.medium,
+      backgroundColor: designTokens.color.darkSurface,
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 15,
     },
     inputDisabled: { opacity: 0.45 },
     helper: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
       fontSize: 12,
       lineHeight: 17,
     },
@@ -68,19 +72,20 @@ export default function TripBasicsSection({
       alignItems: 'center',
       gap: 11,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
-      backgroundColor: colors.card,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.small,
+      backgroundColor: designTokens.color.darkSurface,
     },
     toggleSelected: {
-      borderColor: colors.primary,
-      backgroundColor: colors.secondary,
+      borderColor: designTokens.color.accent,
+      backgroundColor: designTokens.color.accent,
     },
     toggleLabel: {
       flex: 1,
-      color: colors.foreground,
-      fontFamily: 'DMSans_500Medium',
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 14,
+      fontWeight: '500',
     },
     durationRow: {
       minHeight: 48,
@@ -99,15 +104,16 @@ export default function TripBasicsSection({
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.pill,
+      backgroundColor: designTokens.color.darkSurface,
     },
     disabledButton: { opacity: 0.4 },
     durationValue: {
       minWidth: 62,
-      color: colors.primary,
-      fontFamily: 'PlayfairDisplay_500Medium',
-      fontSize: 18,
+      color: designTokens.color.accent,
+      fontFamily: displayFontFamily,
+      fontSize: 12,
       textAlign: 'center',
     },
   });
@@ -136,10 +142,28 @@ export default function TripBasicsSection({
         <Feather
           name={checked ? 'check-square' : 'square'}
           size={18}
-          color={checked ? colors.primary : colors.mutedForeground}
+          color={
+            checked
+              ? designTokens.color.accentForeground
+              : designTokens.color.mutedForeground
+          }
         />
-        <Text style={styles.toggleLabel}>{label}</Text>
-        <Text style={styles.helper}>{detail}</Text>
+        <Text
+          style={[
+            styles.toggleLabel,
+            checked && { color: designTokens.color.accentForeground },
+          ]}
+        >
+          {label}
+        </Text>
+        <Text
+          style={[
+            styles.helper,
+            checked && { color: designTokens.color.accentForeground },
+          ]}
+        >
+          {detail}
+        </Text>
       </Pressable>
     );
   }
@@ -152,7 +176,7 @@ export default function TripBasicsSection({
           value={start}
           onChangeText={onStartChange}
           placeholder="City, neighborhood, or ZIP"
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={designTokens.color.mutedForeground}
           autoCapitalize="words"
           autoCorrect={false}
           returnKeyType="next"
@@ -168,7 +192,7 @@ export default function TripBasicsSection({
           value={destination}
           onChangeText={onDestinationChange}
           placeholder={anywhere ? 'We’ll choose a destination' : 'Somewhere on the horizon'}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={designTokens.color.mutedForeground}
           autoCapitalize="words"
           autoCorrect={false}
           returnKeyType="done"
@@ -207,7 +231,11 @@ export default function TripBasicsSection({
             style={[styles.stepButton, duration <= 1 && styles.disabledButton]}
             testID="button-duration-decrease"
           >
-            <Feather name="minus" size={16} color={colors.foreground} />
+            <Feather
+              name="minus"
+              size={16}
+              color={designTokens.color.foreground}
+            />
           </Pressable>
           <Text style={styles.durationValue} testID="text-drive-duration">
             {duration} {duration === 1 ? 'hour' : 'hours'}
@@ -220,7 +248,11 @@ export default function TripBasicsSection({
             style={[styles.stepButton, duration >= 6 && styles.disabledButton]}
             testID="button-duration-increase"
           >
-            <Feather name="plus" size={16} color={colors.foreground} />
+            <Feather
+              name="plus"
+              size={16}
+              color={designTokens.color.foreground}
+            />
           </Pressable>
         </View>
       </View>

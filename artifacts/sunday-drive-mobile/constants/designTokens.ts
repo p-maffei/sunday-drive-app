@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const designTokens = {
   color: {
     background: '#202322',
@@ -42,3 +44,13 @@ export const designTokens = {
     chipHeight: 34,
   },
 } as const;
+
+export const interfaceFontFamily =
+  Platform.select({
+    ios: designTokens.typography.interface,
+    android: designTokens.typography.interfaceFallback,
+    web: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+    default: designTokens.typography.interfaceFallback,
+  }) ?? designTokens.typography.interfaceFallback;
+
+export const displayFontFamily = designTokens.typography.display;

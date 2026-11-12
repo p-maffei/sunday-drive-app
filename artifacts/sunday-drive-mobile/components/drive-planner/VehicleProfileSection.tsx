@@ -7,7 +7,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import {
+  designTokens,
+  displayFontFamily,
+  interfaceFontFamily,
+} from '@/constants/designTokens';
 import type { Vehicle, VehicleDraft } from './types';
 
 interface VehicleProfileSectionProps {
@@ -29,14 +33,13 @@ export default function VehicleProfileSection({
   onDraftChange,
   onAdd,
 }: VehicleProfileSectionProps) {
-  const colors = useColors();
   const [showForm, setShowForm] = useState(false);
 
   const styles = StyleSheet.create({
     section: { gap: 12 },
     empty: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
       fontSize: 13,
       lineHeight: 19,
     },
@@ -47,24 +50,25 @@ export default function VehicleProfileSection({
       alignItems: 'center',
       gap: 12,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
-      backgroundColor: colors.card,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.small,
+      backgroundColor: designTokens.color.darkSurface,
     },
     vehicleSelected: {
-      borderColor: colors.primary,
-      backgroundColor: colors.secondary,
+      borderColor: designTokens.color.accent,
+      backgroundColor: designTokens.color.darkSurface,
     },
     vehicleCopy: { flex: 1 },
     vehicleName: {
-      color: colors.foreground,
-      fontFamily: 'DMSans_600SemiBold',
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 14,
+      fontWeight: '600',
     },
     vehicleDetails: {
       marginTop: 3,
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
       fontSize: 12,
     },
     addButton: {
@@ -74,31 +78,32 @@ export default function VehicleProfileSection({
       gap: 8,
     },
     addButtonText: {
-      color: colors.primary,
-      fontFamily: 'DMSans_600SemiBold',
+      color: designTokens.color.accent,
+      fontFamily: interfaceFontFamily,
       fontSize: 14,
+      fontWeight: '600',
     },
     form: {
       padding: 14,
       gap: 12,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
-      backgroundColor: colors.card,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.small,
+      backgroundColor: designTokens.color.darkSurface,
     },
     field: { gap: 5 },
     label: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMMono_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: displayFontFamily,
       fontSize: 9,
       letterSpacing: 0.8,
     },
     input: {
       minHeight: 42,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      color: colors.foreground,
-      fontFamily: 'DMSans_400Regular',
+      borderBottomColor: designTokens.color.border,
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 14,
     },
     requiredRow: { flexDirection: 'row', gap: 12 },
@@ -109,17 +114,18 @@ export default function VehicleProfileSection({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      borderRadius: colors.radius,
-      backgroundColor: colors.primary,
+      borderRadius: designTokens.radius.small,
+      backgroundColor: designTokens.color.accent,
     },
     saveText: {
-      color: colors.primaryForeground,
-      fontFamily: 'DMSans_600SemiBold',
+      color: designTokens.color.accentForeground,
+      fontFamily: interfaceFontFamily,
       fontSize: 14,
+      fontWeight: '600',
     },
     error: {
-      color: colors.destructive,
-      fontFamily: 'DMSans_400Regular',
+      color: designTokens.color.accent,
+      fontFamily: interfaceFontFamily,
       fontSize: 12,
     },
   });
@@ -146,7 +152,7 @@ export default function VehicleProfileSection({
           value={value}
           onChangeText={(nextValue) => onDraftChange(field, nextValue)}
           placeholder={label}
-          placeholderTextColor={colors.mutedForeground}
+          placeholderTextColor={designTokens.color.mutedForeground}
           autoCapitalize="words"
           keyboardType={keyboardType}
           style={styles.input}
@@ -180,7 +186,11 @@ export default function VehicleProfileSection({
               <Feather
                 name={selected ? 'check-circle' : 'circle'}
                 size={19}
-                color={selected ? colors.primary : colors.mutedForeground}
+                color={
+                  selected
+                    ? designTokens.color.accent
+                    : designTokens.color.mutedForeground
+                }
               />
               <View style={styles.vehicleCopy}>
                 <Text style={styles.vehicleName}>{title}</Text>
@@ -204,7 +214,7 @@ export default function VehicleProfileSection({
         <Feather
           name={showForm ? 'minus-circle' : 'plus-circle'}
           size={18}
-          color={colors.primary}
+          color={designTokens.color.accent}
         />
         <Text style={styles.addButtonText}>
           {showForm ? 'Close vehicle form' : 'Add a vehicle'}
@@ -238,7 +248,11 @@ export default function VehicleProfileSection({
             testID="button-save-vehicle"
           >
             <Text style={styles.saveText}>Save vehicle</Text>
-            <Feather name="arrow-right" size={17} color={colors.primaryForeground} />
+            <Feather
+              name="arrow-right"
+              size={17}
+              color={designTokens.color.accentForeground}
+            />
           </Pressable>
         </View>
       ) : null}

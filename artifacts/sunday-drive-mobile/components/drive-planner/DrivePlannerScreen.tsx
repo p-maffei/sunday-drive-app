@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
+import { Michroma_400Regular, useFonts } from '@expo-google-fonts/michroma';
 import { useRouter } from 'expo-router';
 import {
   Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -10,7 +12,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { useColors } from '@/hooks/useColors';
+import {
+  designTokens,
+  displayFontFamily,
+  interfaceFontFamily,
+} from '@/constants/designTokens';
 import RoutePreferencesSection from './RoutePreferencesSection';
 import ScoreExplanation from './ScoreExplanation';
 import TripBasicsSection from './TripBasicsSection';
@@ -26,9 +32,14 @@ const EMPTY_VEHICLE_DRAFT: VehicleDraft = {
 };
 
 export default function DrivePlannerScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [displayFontLoaded, displayFontError] = useFonts({
+    Michroma_400Regular,
+  });
+  const topInset = Platform.OS === 'web' ? Math.max(insets.top, 67) : insets.top;
+  const bottomInset =
+    Platform.OS === 'web' ? Math.max(insets.bottom, 34) : insets.bottom;
 
   const [start, setStart] = useState('');
   const [destination, setDestination] = useState('');
@@ -44,14 +55,14 @@ export default function DrivePlannerScreen() {
   const [formError, setFormError] = useState('');
 
   const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.background },
+    screen: { flex: 1, backgroundColor: designTokens.color.background },
     content: {
       width: '100%',
       maxWidth: 560,
       alignSelf: 'center',
-      paddingHorizontal: 22,
-      paddingTop: insets.top + 12,
-      paddingBottom: insets.bottom + 32,
+      paddingHorizontal: designTokens.spacing.medium,
+      paddingTop: topInset + designTokens.spacing.medium,
+      paddingBottom: bottomInset + designTokens.spacing.xlarge,
     },
     header: {
       minHeight: 42,
@@ -66,48 +77,49 @@ export default function DrivePlannerScreen() {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 18,
+      borderColor: designTokens.color.border,
+      borderRadius: designTokens.radius.pill,
+      backgroundColor: designTokens.color.darkSurface,
     },
     brandName: {
-      color: colors.foreground,
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 12,
+      color: designTokens.color.foreground,
+      fontFamily: displayFontFamily,
+      fontSize: 9,
       letterSpacing: 1.7,
     },
     brandSubtitle: {
       marginTop: 3,
-      color: colors.mutedForeground,
-      fontFamily: 'DMMono_400Regular',
-      fontSize: 8,
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
+      fontSize: designTokens.typography.size.label,
       letterSpacing: 1,
     },
     eyebrow: {
       marginBottom: 10,
-      color: colors.primary,
-      fontFamily: 'DMMono_400Regular',
+      color: designTokens.color.accent,
+      fontFamily: displayFontFamily,
       fontSize: 9,
       letterSpacing: 1.2,
     },
     title: {
       marginBottom: 9,
-      color: colors.foreground,
-      fontFamily: 'PlayfairDisplay_500Medium',
-      fontSize: 36,
-      lineHeight: 43,
+      color: designTokens.color.foreground,
+      fontFamily: displayFontFamily,
+      fontSize: 25,
+      lineHeight: 34,
     },
     intro: {
       marginBottom: 25,
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
+      fontSize: designTokens.typography.size.body,
       lineHeight: 21,
     },
     section: {
       marginTop: 24,
       paddingTop: 21,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderTopColor: designTokens.color.border,
       gap: 15,
     },
     sectionHeader: {
@@ -116,47 +128,49 @@ export default function DrivePlannerScreen() {
       justifyContent: 'space-between',
     },
     sectionTitle: {
-      color: colors.foreground,
-      fontFamily: 'PlayfairDisplay_500Medium',
-      fontSize: 22,
+      color: designTokens.color.foreground,
+      fontFamily: displayFontFamily,
+      fontSize: designTokens.typography.size.section,
     },
     sectionIndex: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMMono_400Regular',
+      color: designTokens.color.mutedForeground,
+      fontFamily: displayFontFamily,
       fontSize: 8,
       letterSpacing: 0.8,
     },
     error: {
       padding: 12,
       borderLeftWidth: 2,
-      borderLeftColor: colors.destructive,
-      backgroundColor: colors.secondary,
-      color: colors.secondaryForeground,
-      fontFamily: 'DMSans_400Regular',
+      borderLeftColor: designTokens.color.accent,
+      backgroundColor: designTokens.color.darkSurface,
+      color: designTokens.color.foreground,
+      fontFamily: interfaceFontFamily,
       fontSize: 13,
       lineHeight: 19,
     },
     submit: {
-      minHeight: 54,
+      minHeight: designTokens.component.buttonHeight,
       marginTop: 24,
       paddingHorizontal: 18,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      borderRadius: colors.radius,
-      backgroundColor: colors.primary,
+      borderRadius: designTokens.radius.small,
+      backgroundColor: designTokens.color.accent,
     },
     submitPressed: { opacity: 0.82 },
     submitText: {
-      color: colors.primaryForeground,
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 15,
+      color: designTokens.color.accentForeground,
+      fontFamily: interfaceFontFamily,
+      fontSize: designTokens.typography.size.button,
+      fontWeight: '700',
+      letterSpacing: 0.5,
     },
     footer: {
       marginTop: 12,
-      color: colors.mutedForeground,
-      fontFamily: 'DMMono_400Regular',
-      fontSize: 9,
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
+      fontSize: 11,
       lineHeight: 15,
       textAlign: 'center',
     },
@@ -217,6 +231,8 @@ export default function DrivePlannerScreen() {
     router.push('/discovery');
   }
 
+  if (!displayFontLoaded && !displayFontError) return null;
+
   return (
     <View style={styles.screen}>
       <KeyboardAwareScrollViewCompat
@@ -227,7 +243,11 @@ export default function DrivePlannerScreen() {
       >
         <View style={styles.header}>
           <View style={styles.brandIcon}>
-            <Feather name="navigation" size={17} color={colors.primary} />
+            <Feather
+              name="navigation"
+              size={17}
+              color={designTokens.color.accent}
+            />
           </View>
           <View>
             <Text style={styles.brandName}>SUNDAY DRIVE</Text>
@@ -320,7 +340,7 @@ export default function DrivePlannerScreen() {
           <Feather
             name="arrow-up-right"
             size={19}
-            color={colors.primaryForeground}
+            color={designTokens.color.accentForeground}
           />
         </Pressable>
         <Text style={styles.footer}>
