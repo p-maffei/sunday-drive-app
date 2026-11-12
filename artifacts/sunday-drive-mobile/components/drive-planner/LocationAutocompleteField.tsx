@@ -197,7 +197,9 @@ export default function LocationAutocompleteField({
             </View>
           ) : suggestions.length === 0 ? (
             <View style={styles.status}>
-              <Text style={styles.statusText}>No locations found. Try a nearby city or address.</Text>
+              <Text style={styles.statusText}>
+                No California locations found. Try a city or address in California.
+              </Text>
             </View>
           ) : (
             suggestions.map((suggestion) => (
