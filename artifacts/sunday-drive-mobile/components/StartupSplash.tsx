@@ -14,6 +14,7 @@ import {
 } from '@/constants/designTokens';
 
 interface StartupSplashProps {
+  displayDurationMs: number;
   onFinished: () => void;
 }
 
@@ -58,30 +59,40 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function StartupSplash({ onFinished }: StartupSplashProps) {
+export default function StartupSplash({
+  displayDurationMs,
+  onFinished,
+}: StartupSplashProps) {
   const insets = useSafeAreaInsets();
   const opacity = useRef(new Animated.Value(1)).current;
   const [activeDots, setActiveDots] = useState(1);
+  const [imageReady, setImageReady] = useState(false);
 
   useEffect(() => {
+    if (!imageReady) return;
+
     const dotTimer = setInterval(() => {
       setActiveDots((current) => (current % DOT_COUNT) + 1);
     }, DOT_INTERVAL_MS);
 
-    const fade = Animated.timing(opacity, {
-      toValue: 0,
-      duration: FADE_DURATION_MS,
-      useNativeDriver: Platform.OS !== 'web',
-    });
-    fade.start(({ finished }) => {
-      if (finished) onFinished();
-    });
+    let fade: Animated.CompositeAnimation | undefined;
+    const fadeTimer = setTimeout(() => {
+      fade = Animated.timing(opacity, {
+        toValue: 0,
+        duration: FADE_DURATION_MS,
+        useNativeDriver: Platform.OS !== 'web',
+      });
+      fade.start(({ finished }) => {
+        if (finished) onFinished();
+      });
+    }, displayDurationMs);
 
     return () => {
       clearInterval(dotTimer);
-      fade.stop();
+      clearTimeout(fadeTimer);
+      fade?.stop();
     };
-  }, [onFinished, opacity]);
+  }, [displayDurationMs, imageReady, onFinished, opacity]);
 
   return (
     <Animated.View
@@ -97,6 +108,8 @@ export default function StartupSplash({ onFinished }: StartupSplashProps) {
           resizeMode="cover"
           style={StyleSheet.absoluteFill}
           accessible={false}
+          testID="startup-splash-image"
+          onLoadEnd={() => setImageReady(true)}
         />
         <View style={[styles.wordmark, { bottom: insets.bottom + 76 }]}>
           <Text style={styles.title}>SUNDAY DRIVE</Text>

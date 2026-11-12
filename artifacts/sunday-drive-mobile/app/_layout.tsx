@@ -18,6 +18,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setBaseUrl } from '@workspace/api-client-react';
 import StartupSplash from '../components/StartupSplash';
 
+// Development-only viewing window; set to 0 to disable it.
+const STARTUP_SPLASH_TEST_DURATION_MS = __DEV__ ? 5000 : 0;
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -66,7 +69,10 @@ export default function RootLayout() {
             <QueryClientProvider client={queryClient}>
               <RootLayoutNav />
               {splashVisible ? (
-                <StartupSplash onFinished={finishSplash} />
+                <StartupSplash
+                  displayDurationMs={STARTUP_SPLASH_TEST_DURATION_MS}
+                  onFinished={finishSplash}
+                />
               ) : null}
             </QueryClientProvider>
           </KeyboardProvider>
