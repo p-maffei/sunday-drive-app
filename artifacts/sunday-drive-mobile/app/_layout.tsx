@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,10 +11,12 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { DMMono_400Regular } from '@expo-google-fonts/dm-mono';
 import { PlayfairDisplay_500Medium } from '@expo-google-fonts/playfair-display';
+import { Michroma_400Regular } from '@expo-google-fonts/michroma';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setBaseUrl } from '@workspace/api-client-react';
+import StartupSplash from '../components/StartupSplash';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,7 +45,10 @@ export default function RootLayout() {
     DMSans_700Bold,
     DMMono_400Regular,
     PlayfairDisplay_500Medium,
+    Michroma_400Regular,
   });
+  const [splashVisible, setSplashVisible] = useState(true);
+  const finishSplash = useCallback(() => setSplashVisible(false), []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -60,6 +65,9 @@ export default function RootLayout() {
           <KeyboardProvider>
             <QueryClientProvider client={queryClient}>
               <RootLayoutNav />
+              {splashVisible ? (
+                <StartupSplash onFinished={finishSplash} />
+              ) : null}
             </QueryClientProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
