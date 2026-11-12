@@ -1,2 +1,3 @@
 - [Sunday Drive learning goals](sunday-drive-learning-goals.md) — keep this project beginner-friendly and explain the software concepts as it grows.
 - [Sunday Drive Phase 1 scope](sunday-drive-phase-1-scope.md) — Mobile-only; build the planner first and defer the map and route-discovery data.
+- [Mobile component tests](mobile-component-tests.md) — React Native Testing Library v14 uses async rendering, queries, and events.
