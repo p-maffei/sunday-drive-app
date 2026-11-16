@@ -18,3 +18,8 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_ROUTE_API_URL = "https://aaefdcdf-f9a0-401e-8c95-7aac81ad8667-00-3jleeixv60ins.kirk.replit.dev"

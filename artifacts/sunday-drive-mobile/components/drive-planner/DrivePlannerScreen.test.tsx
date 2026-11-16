@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import DrivePlannerScreen from './DrivePlannerScreen';
 
 const mockRouter = { push: jest.fn() };
+const mockSetGeneratedDrive = jest.fn();
 const mockSuggestion = {
   id: 'place-1',
   label: 'Pasadena, California',
@@ -24,6 +25,10 @@ jest.mock('@workspace/api-client-react', () => ({
     isError: false,
   }),
   setBaseUrl: jest.fn(),
+}));
+
+jest.mock('./RouteResultContext', () => ({
+  useRouteResult: () => ({ setGeneratedDrive: mockSetGeneratedDrive }),
 }));
 
 jest.mock('@expo-google-fonts/michroma', () => ({
@@ -47,6 +52,27 @@ jest.mock('@/components/KeyboardAwareScrollViewCompat', () => {
 describe('drive planner behavior', () => {
   beforeEach(() => {
     mockRouter.push.mockClear();
+    mockSetGeneratedDrive.mockClear();
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        geojson: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [-118.1445, 34.1478],
+              [-118.2437, 34.0522],
+            ],
+          },
+        },
+        distance_km: 30.5,
+        match_pct: 92,
+        breakdown: { curvy: 0.9 },
+      }),
+    } as Response);
+    process.env.EXPO_PUBLIC_ROUTE_API_URL = 'https://api.example.test';
     jest
       .mocked(useRouter)
       .mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
@@ -157,7 +183,7 @@ describe('drive planner behavior', () => {
     );
   });
 
-  it('routes to discovery after a starting location is selected', async () => {
+  it('sends geocoded coordinates and supported preferences, then opens route results', async () => {
     const screen = await render(<DrivePlannerScreen />);
 
     await fireEvent(await screen.getByTestId('input-start-location'), 'focus');
@@ -168,8 +194,39 @@ describe('drive planner behavior', () => {
     await fireEvent.press(
       await screen.findByTestId('input-start-location-suggestion-place-1'),
     );
+
+    await fireEvent(await screen.getByTestId('input-destination'), 'focus');
+    await fireEvent.changeText(
+      await screen.getByTestId('input-destination'),
+      'Santa Monica',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-destination-suggestion-place-1'),
+    );
+
+    await fireEvent.press(await screen.getByTestId('preference-curvy-winding-roads'));
+    await fireEvent.press(await screen.getByTestId('preference-backroads'));
+    await fireEvent.press(await screen.getByTestId('preference-urban-cruising'));
+    await fireEvent.press(await screen.getByTestId('preference-scenic-roads'));
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://api.example.test/route',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          start: [-118.1445, 34.1478],
+          end: [-118.1445, 34.1478],
+          preferences: ['curvy', 'backroads', 'urban'],
+          strength: 7,
+        }),
+      }),
+    );
+    expect(mockSetGeneratedDrive).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route: expect.objectContaining({ distance_km: 30.5, match_pct: 92 }),
+      }),
+    );
     expect(mockRouter.push).toHaveBeenCalledWith('/discovery');
     expect(await screen.queryByTestId('error-drive-form')).toBeNull();
   });

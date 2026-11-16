@@ -17,6 +17,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setBaseUrl } from '@workspace/api-client-react';
 import StartupSplash from '../components/StartupSplash';
+import { RouteResultProvider } from '@/components/drive-planner/RouteResultContext';
 
 // Development-only viewing window; set to 0 to disable it.
 const STARTUP_SPLASH_TEST_DURATION_MS = __DEV__ ? 5000 : 0;
@@ -67,13 +68,15 @@ export default function RootLayout() {
         <GestureHandlerRootView>
           <KeyboardProvider>
             <QueryClientProvider client={queryClient}>
-              <RootLayoutNav />
-              {splashVisible ? (
-                <StartupSplash
-                  displayDurationMs={STARTUP_SPLASH_TEST_DURATION_MS}
-                  onFinished={finishSplash}
-                />
-              ) : null}
+              <RouteResultProvider>
+                <RootLayoutNav />
+                {splashVisible ? (
+                  <StartupSplash
+                    displayDurationMs={STARTUP_SPLASH_TEST_DURATION_MS}
+                    onFinished={finishSplash}
+                  />
+                ) : null}
+              </RouteResultProvider>
             </QueryClientProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>

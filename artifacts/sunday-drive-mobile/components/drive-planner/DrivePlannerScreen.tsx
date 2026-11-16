@@ -3,6 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { Michroma_400Regular, useFonts } from '@expo-google-fonts/michroma';
 import { useRouter } from 'expo-router';
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   Pressable,
@@ -18,6 +19,7 @@ import {
   interfaceFontFamily,
 } from '@/constants/designTokens';
 import RoutePreferencesSection from './RoutePreferencesSection';
+import { useRouteResult, type RouteResult } from './RouteResultContext';
 import ScoreExplanation from './ScoreExplanation';
 import TripBasicsSection from './TripBasicsSection';
 import VehicleProfileSection from './VehicleProfileSection';
@@ -39,6 +41,7 @@ const EMPTY_VEHICLE_DRAFT: VehicleDraft = {
 export default function DrivePlannerScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { setGeneratedDrive } = useRouteResult();
   const [displayFontLoaded, displayFontError] = useFonts({
     Michroma_400Regular,
   });
@@ -63,6 +66,7 @@ export default function DrivePlannerScreen() {
     useState<VehicleDraft>(EMPTY_VEHICLE_DRAFT);
   const [vehicleError, setVehicleError] = useState('');
   const [formError, setFormError] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: designTokens.color.background },
@@ -230,15 +234,90 @@ export default function DrivePlannerScreen() {
     setVehicleError('');
   }
 
-  function submitDrive() {
+  async function submitDrive() {
     if (!startLocation) {
       setFormError('Choose a starting location from the suggestions.');
+      return;
+    }
+    if (!destinationLocation) {
+      setFormError('Choose a destination from the suggestions to generate a route.');
+      return;
+    }
+    const routeApiUrl = process.env.EXPO_PUBLIC_ROUTE_API_URL?.replace(/\/+$/, '');
+    if (!routeApiUrl) {
+      setFormError('Route generation is temporarily unavailable. Please try again later.');
       return;
     }
 
     Keyboard.dismiss();
     setFormError('');
-    router.push('/discovery');
+    setGeneratedDrive(null);
+    setIsGenerating(true);
+    const preferenceKeys: Partial<Record<RoutePreference, string>> = {
+      'Curvy / winding roads': 'curvy',
+      Backroads: 'backroads',
+      'Urban cruising': 'urban',
+    };
+    const supportedPreferences = preferences
+      .map((preference) => preferenceKeys[preference])
+      .filter((preference): preference is string => Boolean(preference));
+
+    try {
+      const response = await fetch(`${routeApiUrl}/route`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          start: [startLocation.longitude, startLocation.latitude],
+          end: [destinationLocation.longitude, destinationLocation.latitude],
+          preferences: supportedPreferences,
+          strength: 7,
+        }),
+      });
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new Error('The route service returned an unreadable response. Please try again.');
+      }
+      if (!response.ok) {
+        const serverMessage = payload && typeof payload === 'object'
+          ? 'error' in payload && typeof payload.error === 'string'
+            ? payload.error
+            : 'message' in payload && typeof payload.message === 'string'
+              ? payload.message
+              : null
+          : null;
+        throw new Error(serverMessage ?? 'We couldn’t find a route right now.');
+      }
+      if (
+        !payload ||
+        typeof payload !== 'object' ||
+        !('geojson' in payload) ||
+        !('distance_km' in payload) ||
+        typeof payload.distance_km !== 'number' ||
+        !('match_pct' in payload) ||
+        typeof payload.match_pct !== 'number' ||
+        !('breakdown' in payload)
+      ) {
+        throw new Error('The route service returned an incomplete route. Please try again.');
+      }
+      setGeneratedDrive({
+        route: payload as RouteResult,
+        start: startLocation,
+        end: destinationLocation,
+      });
+      router.push('/discovery');
+    } catch (error) {
+      setFormError(
+        error instanceof TypeError
+          ? 'We couldn’t connect to the route service. Check your connection and try again.'
+          : error instanceof Error
+          ? error.message
+          : 'We couldn’t find a route right now. Please try again.',
+      );
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   if (!displayFontLoaded && !displayFontError) return null;
@@ -268,8 +347,8 @@ export default function DrivePlannerScreen() {
         <Text style={styles.eyebrow}>A BETTER KIND OF DETOUR</Text>
         <Text style={styles.title}>Plan a drive.</Text>
         <Text style={styles.intro}>
-          Set the kind of day you want on the road. We’ll use your choices to
-          shape route discovery in a future step.
+          Set the kind of day you want on the road. We’ll find a route shaped by
+          your choices.
         </Text>
 
         <View style={styles.section}>
@@ -358,21 +437,32 @@ export default function DrivePlannerScreen() {
         <Pressable
           accessibilityRole="button"
           onPress={submitDrive}
+          disabled={isGenerating}
           style={({ pressed }) => [
             styles.submit,
             pressed && styles.submitPressed,
+            isGenerating && { opacity: 0.75 },
           ]}
           testID="button-find-drive"
         >
-          <Text style={styles.submitText}>Find My Drive</Text>
-          <Feather
-            name="arrow-up-right"
-            size={19}
-            color={designTokens.color.accentForeground}
-          />
+          {isGenerating ? (
+            <>
+              <Text style={styles.submitText}>Finding your drive…</Text>
+              <ActivityIndicator size="small" color={designTokens.color.accentForeground} testID="loading-route" />
+            </>
+          ) : (
+            <>
+              <Text style={styles.submitText}>Find My Drive</Text>
+              <Feather
+                name="arrow-up-right"
+                size={19}
+                color={designTokens.color.accentForeground}
+              />
+            </>
+          )}
         </Pressable>
         <Text style={styles.footer}>
-          Your choices stay on this screen for now. No route is generated yet.
+          Only supported road preferences are used to shape your route.
         </Text>
       </KeyboardAwareScrollViewCompat>
     </View>
