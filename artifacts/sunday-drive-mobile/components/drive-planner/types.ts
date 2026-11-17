@@ -1,16 +1,10 @@
 export const ROUTE_PREFERENCES = [
-  'Scenic roads',
-  'Curvy / winding roads',
-  'Urban cruising',
-  'Lower average traffic',
-  'Backroads',
-  'Coastal roads',
-  'Mountain / canyon roads',
-  'Historic roads',
-  'Interesting roads in general',
+  { id: 'curvy', label: 'Curvy' },
+  { id: 'backroads', label: 'Backroads' },
+  { id: 'urban', label: 'Urban' },
 ] as const;
 
-export type RoutePreference = (typeof ROUTE_PREFERENCES)[number];
+export type RoutePreference = (typeof ROUTE_PREFERENCES)[number]['id'];
 
 export interface GeocodedLocation {
   id: string;

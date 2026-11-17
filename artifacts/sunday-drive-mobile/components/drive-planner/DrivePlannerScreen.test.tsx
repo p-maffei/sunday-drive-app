@@ -123,14 +123,26 @@ describe('drive planner behavior', () => {
     ).toBeNull();
   });
 
-  it('lets users toggle route preferences and choose a different vehicle', async () => {
+  it('shows only supported preferences and keeps urban and backroads exclusive', async () => {
     const screen = await render(<DrivePlannerScreen />);
-    const scenicRoads = await screen.getByTestId('preference-scenic-roads');
+    const curvy = await screen.getByTestId('preference-curvy');
+    const backroads = await screen.getByTestId('preference-backroads');
+    const urban = await screen.getByTestId('preference-urban');
+    expect(await screen.getAllByTestId(/^preference-/)).toHaveLength(3);
 
-    await fireEvent.press(scenicRoads);
-    expect(scenicRoads.props.accessibilityState).toEqual({ checked: true });
-    await fireEvent.press(scenicRoads);
-    expect(scenicRoads.props.accessibilityState).toEqual({ checked: false });
+    await fireEvent.press(curvy);
+    await fireEvent.press(backroads);
+    expect(curvy.props.accessibilityState).toEqual({ checked: true });
+    expect(backroads.props.accessibilityState).toEqual({ checked: true });
+
+    await fireEvent.press(urban);
+    expect(curvy.props.accessibilityState).toEqual({ checked: true });
+    expect(backroads.props.accessibilityState).toEqual({ checked: false });
+    expect(urban.props.accessibilityState).toEqual({ checked: true });
+
+    await fireEvent.press(backroads);
+    expect(backroads.props.accessibilityState).toEqual({ checked: true });
+    expect(urban.props.accessibilityState).toEqual({ checked: false });
 
     await fireEvent.press(await screen.getByTestId('button-toggle-add-vehicle'));
     await fireEvent.changeText(await screen.getByTestId('vehicle-year'), '2020');
@@ -207,10 +219,9 @@ describe('drive planner behavior', () => {
       await screen.findByTestId('input-destination-suggestion-place-1'),
     );
 
-    await fireEvent.press(await screen.getByTestId('preference-curvy-winding-roads'));
+    await fireEvent.press(await screen.getByTestId('preference-curvy'));
     await fireEvent.press(await screen.getByTestId('preference-backroads'));
-    await fireEvent.press(await screen.getByTestId('preference-urban-cruising'));
-    await fireEvent.press(await screen.getByTestId('preference-scenic-roads'));
+    await fireEvent.press(await screen.getByTestId('preference-urban'));
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -220,7 +231,7 @@ describe('drive planner behavior', () => {
         body: JSON.stringify({
           start: [-118.1445, 34.1478],
           end: [-118.1445, 34.1478],
-          preferences: ['curvy', 'backroads', 'urban'],
+          preferences: ['curvy', 'urban'],
           strength: 7,
         }),
       }),

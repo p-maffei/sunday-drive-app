@@ -191,11 +191,22 @@ export default function DrivePlannerScreen() {
   });
 
   function togglePreference(preference: RoutePreference) {
-    setPreferences((current) =>
-      current.includes(preference)
-        ? current.filter((item) => item !== preference)
-        : [...current, preference],
-    );
+    setPreferences((current) => {
+      if (current.includes(preference)) {
+        return current.filter((item) => item !== preference);
+      }
+
+      if (preference === 'urban' || preference === 'backroads') {
+        const otherExclusiveOption =
+          preference === 'urban' ? 'backroads' : 'urban';
+        return [
+          ...current.filter((item) => item !== otherExclusiveOption),
+          preference,
+        ];
+      }
+
+      return [...current, preference];
+    });
   }
 
   function updateVehicleDraft(field: keyof VehicleDraft, value: string) {
@@ -253,15 +264,6 @@ export default function DrivePlannerScreen() {
     setFormError('');
     setGeneratedDrive(null);
     setIsGenerating(true);
-    const preferenceKeys: Partial<Record<RoutePreference, string>> = {
-      'Curvy / winding roads': 'curvy',
-      Backroads: 'backroads',
-      'Urban cruising': 'urban',
-    };
-    const supportedPreferences = preferences
-      .map((preference) => preferenceKeys[preference])
-      .filter((preference): preference is string => Boolean(preference));
-
     try {
       const response = await fetch(`${routeApiUrl}/route`, {
         method: 'POST',
@@ -269,7 +271,7 @@ export default function DrivePlannerScreen() {
         body: JSON.stringify({
           start: [startLocation.longitude, startLocation.latitude],
           end: [destinationLocation.longitude, destinationLocation.latitude],
-          preferences: supportedPreferences,
+          preferences,
           strength: 7,
         }),
       });

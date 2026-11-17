@@ -374,7 +374,7 @@ export default function VisualSpecimenScreen() {
             <View style={styles.chipRow}>
               <View style={[styles.chip, { backgroundColor: tokens.color.accent }]}>
                 <Feather name="check" size={13} color={tokens.color.accentForeground} />
-                <Text style={[styles.chipText, { color: tokens.color.accentForeground }]}>Coastal</Text>
+                <Text style={[styles.chipText, { color: tokens.color.accentForeground }]}>Backroads</Text>
               </View>
               <View style={styles.chip}>
                 <Text style={styles.chipText}>Curvy roads</Text>

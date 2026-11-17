@@ -43,15 +43,15 @@ export default function RoutePreferencesSection({
   return (
     <View style={styles.container}>
       {ROUTE_PREFERENCES.map((preference) => {
-        const isSelected = selected.includes(preference);
+        const isSelected = selected.includes(preference.id);
         return (
           <Pressable
-            key={preference}
+            key={preference.id}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: isSelected }}
-            onPress={() => onToggle(preference)}
+            onPress={() => onToggle(preference.id)}
             style={[styles.option, isSelected && styles.selected]}
-            testID={`preference-${preference.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+            testID={`preference-${preference.id}`}
           >
             {isSelected ? (
               <Feather
@@ -66,7 +66,7 @@ export default function RoutePreferencesSection({
                 isSelected && { color: designTokens.color.accentForeground },
               ]}
             >
-              {preference}
+              {preference.label}
             </Text>
           </Pressable>
         );
