@@ -1,11 +1,25 @@
-export function formatRouteSummary(distanceKm: number, durationMin?: number) {
-  const distance = `${distanceKm.toFixed(1)} km`;
+export function formatDistance(
+  distanceKm?: number | null,
+  unit: 'mi' | 'km' = 'mi',
+) {
+  if (distanceKm === undefined || distanceKm === null) return '';
+  const value = unit === 'mi' ? distanceKm / 1.609344 : distanceKm;
+  return `${value.toFixed(1)} ${unit}`;
+}
+
+export function formatRouteSummary(
+  distanceKm?: number | null,
+  durationMin?: number,
+) {
+  const distance = formatDistance(distanceKm);
   if (durationMin === undefined) return distance;
 
-  if (durationMin < 60) return `${distance} · ${durationMin} min`;
+  const duration =
+    durationMin < 60
+      ? `${durationMin} min`
+      : `${Math.floor(durationMin / 60)} h${
+          durationMin % 60 === 0 ? '' : ` ${durationMin % 60} min`
+        }`;
 
-  const hours = Math.floor(durationMin / 60);
-  const minutes = durationMin % 60;
-  const duration = minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
-  return `${distance} · ${duration}`;
+  return distance ? `${distance} · ${duration}` : duration;
 }
