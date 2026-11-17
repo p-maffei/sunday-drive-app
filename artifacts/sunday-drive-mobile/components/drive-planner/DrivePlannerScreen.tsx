@@ -13,11 +13,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import {
-  designTokens,
-  displayFontFamily,
-  interfaceFontFamily,
-} from '@/constants/designTokens';
+import { designTokens } from '@/constants/designTokens';
+import { theme } from '@/constants/theme';
 import RoutePreferencesSection from './RoutePreferencesSection';
 import { useRouteResult, type RouteResult } from './RouteResultContext';
 import ScoreExplanation from './ScoreExplanation';
@@ -69,7 +66,7 @@ export default function DrivePlannerScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: designTokens.color.background },
+    screen: { flex: 1, backgroundColor: theme.colors.background },
     content: {
       width: '100%',
       maxWidth: 560,
@@ -91,49 +88,34 @@ export default function DrivePlannerScreen() {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: designTokens.color.border,
+      borderColor: theme.colors.border,
       borderRadius: designTokens.radius.pill,
-      backgroundColor: designTokens.color.darkSurface,
+      backgroundColor: theme.colors.surface,
     },
     brandName: {
-      color: designTokens.color.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: 10,
-      letterSpacing: 1.7,
+      ...theme.text.brandName,
     },
     brandSubtitle: {
       marginTop: 3,
-      color: designTokens.color.mutedForeground,
-      fontFamily: interfaceFontFamily,
-      fontSize: designTokens.typography.size.label,
-      letterSpacing: 1,
+      ...theme.text.brandSubtitle,
     },
     eyebrow: {
       marginBottom: 10,
-      color: designTokens.color.accent,
-      fontFamily: displayFontFamily,
-      fontSize: 10,
-      letterSpacing: 1.2,
+      ...theme.text.eyebrow,
     },
     title: {
       marginBottom: 9,
-      color: designTokens.color.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: 25,
-      lineHeight: 34,
+      ...theme.text.title,
     },
     intro: {
       marginBottom: 25,
-      color: designTokens.color.mutedForeground,
-      fontFamily: interfaceFontFamily,
-      fontSize: designTokens.typography.size.body,
-      lineHeight: 21,
+      ...theme.text.intro,
     },
     section: {
       marginTop: 24,
       paddingTop: 21,
       borderTopWidth: 1,
-      borderTopColor: designTokens.color.border,
+      borderTopColor: theme.colors.border,
       gap: 15,
     },
     sectionHeader: {
@@ -142,25 +124,17 @@ export default function DrivePlannerScreen() {
       justifyContent: 'space-between',
     },
     sectionTitle: {
-      color: designTokens.color.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: designTokens.typography.size.section,
+      ...theme.text.sectionTitle,
     },
     sectionIndex: {
-      color: designTokens.color.mutedForeground,
-      fontFamily: displayFontFamily,
-      fontSize: 9,
-      letterSpacing: 0.8,
+      ...theme.text.sectionIndex,
     },
     error: {
       padding: 12,
       borderLeftWidth: 2,
-      borderLeftColor: designTokens.color.accent,
-      backgroundColor: designTokens.color.darkSurface,
-      color: designTokens.color.foreground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 13,
-      lineHeight: 19,
+      borderLeftColor: theme.colors.accent,
+      backgroundColor: theme.colors.surface,
+      ...theme.text.error,
     },
     submit: {
       minHeight: designTokens.component.buttonHeight,
@@ -170,22 +144,15 @@ export default function DrivePlannerScreen() {
       alignItems: 'center',
       justifyContent: 'space-between',
       borderRadius: designTokens.radius.small,
-      backgroundColor: designTokens.color.accent,
+      backgroundColor: theme.colors.accent,
     },
     submitPressed: { opacity: 0.82 },
     submitText: {
-      color: designTokens.color.accentForeground,
-      fontFamily: interfaceFontFamily,
-      fontSize: designTokens.typography.size.button,
-      fontWeight: '700',
-      letterSpacing: 0.5,
+      ...theme.text.button,
     },
     footer: {
       marginTop: 12,
-      color: designTokens.color.mutedForeground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 11,
-      lineHeight: 15,
+      ...theme.text.footer,
       textAlign: 'center',
     },
   });
@@ -336,7 +303,7 @@ export default function DrivePlannerScreen() {
             <Feather
               name="navigation"
               size={17}
-              color={designTokens.color.accent}
+              color={theme.colors.accent}
             />
           </View>
           <View>
@@ -449,7 +416,7 @@ export default function DrivePlannerScreen() {
           {isGenerating ? (
             <>
               <Text style={styles.submitText}>Finding your drive…</Text>
-              <ActivityIndicator size="small" color={designTokens.color.accentForeground} testID="loading-route" />
+              <ActivityIndicator size="small" color={theme.colors.accentText} testID="loading-route" />
             </>
           ) : (
             <>
@@ -457,7 +424,7 @@ export default function DrivePlannerScreen() {
               <Feather
                 name="arrow-up-right"
                 size={19}
-                color={designTokens.color.accentForeground}
+                color={theme.colors.accentText}
               />
             </>
           )}

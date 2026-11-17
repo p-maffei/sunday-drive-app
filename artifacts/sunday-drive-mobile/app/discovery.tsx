@@ -2,26 +2,20 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColors } from '@/hooks/useColors';
 import RouteMap from '@/components/drive-planner/RouteMap';
 import { useRouteResult } from '@/components/drive-planner/RouteResultContext';
 import { formatRouteSummary } from '@/components/drive-planner/routeSummary';
-import {
-  designTokens,
-  displayFontFamily,
-  interfaceFontFamily,
-} from '@/constants/designTokens';
+import { theme } from '@/constants/theme';
 
 export default function DiscoveryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = useColors();
   const { generatedDrive } = useRouteResult();
 
   const styles = StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: theme.colors.background,
     },
     content: {
       width: '100%',
@@ -40,27 +34,20 @@ export default function DiscoveryScreen() {
     },
     eyebrow: {
       marginBottom: 6,
-      color: designTokens.color.accent,
-      fontFamily: displayFontFamily,
-      fontSize: 10,
-      letterSpacing: 1.2,
+      ...theme.text.resultEyebrow,
     },
     title: {
-      color: colors.foreground,
-      fontFamily: displayFontFamily,
+      ...theme.text.title,
       fontSize: 23,
       lineHeight: 32,
     },
     description: {
-      color: colors.mutedForeground,
-      fontFamily: interfaceFontFamily,
+      ...theme.text.intro,
       fontSize: 14,
       lineHeight: 20,
     },
     backText: {
-      color: colors.foreground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 14,
+      ...theme.text.backButton,
     },
     scoreRow: {
       flexDirection: 'row',
@@ -72,35 +59,21 @@ export default function DiscoveryScreen() {
       padding: 14,
       justifyContent: 'center',
       gap: 4,
-      borderWidth: 1,
-      borderColor: designTokens.color.border,
-      borderRadius: designTokens.radius.small,
-      backgroundColor: designTokens.color.darkSurface,
+      ...theme.cards.bordered,
     },
     scoreLabel: {
-      color: colors.mutedForeground,
-      fontFamily: displayFontFamily,
-      fontSize: 9,
-      letterSpacing: 0.6,
+      ...theme.text.scoreLabel,
     },
     scoreValue: {
-      color: colors.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: 19,
+      ...theme.text.scoreValue,
     },
     breakdown: {
       padding: 16,
       gap: 11,
-      borderWidth: 1,
-      borderColor: designTokens.color.border,
-      borderRadius: designTokens.radius.small,
-      backgroundColor: designTokens.color.darkSurface,
+      ...theme.cards.bordered,
     },
     breakdownTitle: {
-      color: colors.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: 12,
-      letterSpacing: 0.5,
+      ...theme.text.breakdownTitle,
       marginBottom: 2,
     },
     breakdownRow: {
@@ -112,16 +85,11 @@ export default function DiscoveryScreen() {
     },
     breakdownLabel: {
       flex: 1,
-      color: colors.mutedForeground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 13,
+      ...theme.text.breakdownLabel,
       textTransform: 'capitalize',
     },
     breakdownValue: {
-      color: colors.foreground,
-      fontFamily: interfaceFontFamily,
-      fontSize: 13,
-      fontWeight: '600',
+      ...theme.text.breakdownValue,
     },
     emptyState: {
       flex: 1,
@@ -129,9 +97,7 @@ export default function DiscoveryScreen() {
       gap: 10,
     },
     emptyTitle: {
-      color: colors.foreground,
-      fontFamily: displayFontFamily,
-      fontSize: 24,
+      ...theme.text.emptyTitle,
     },
   });
 
@@ -153,7 +119,7 @@ export default function DiscoveryScreen() {
         style={styles.backButton}
         testID="button-back-to-planner"
       >
-        <Feather name="arrow-left" size={17} color={colors.foreground} />
+        <Feather name="arrow-left" size={17} color={theme.colors.primaryText} />
         <Text style={styles.backText}>Back to planner</Text>
       </Pressable>
 

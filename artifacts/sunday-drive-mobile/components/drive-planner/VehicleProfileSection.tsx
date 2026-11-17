@@ -12,6 +12,7 @@ import {
   displayFontFamily,
   interfaceFontFamily,
 } from '@/constants/designTokens';
+import { theme } from '@/constants/theme';
 import type { Vehicle, VehicleDraft } from './types';
 
 interface VehicleProfileSectionProps {
@@ -124,9 +125,7 @@ export default function VehicleProfileSection({
       fontWeight: '600',
     },
     error: {
-      color: designTokens.color.accent,
-      fontFamily: interfaceFontFamily,
-      fontSize: 12,
+      ...theme.text.errorAccent,
     },
   });
 
