@@ -9,6 +9,7 @@ export type RouteBreakdown = Partial<
 export interface RouteResult {
   geojson: FeatureCollection<Geometry>;
   distance_km: number;
+  duration_min?: number;
   match_pct: number | null;
   breakdown: RouteBreakdown;
 }

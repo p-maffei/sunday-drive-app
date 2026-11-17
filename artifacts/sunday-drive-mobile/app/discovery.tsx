@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import RouteMap from '@/components/drive-planner/RouteMap';
 import { useRouteResult } from '@/components/drive-planner/RouteResultContext';
+import { formatRouteSummary } from '@/components/drive-planner/routeSummary';
 import {
   designTokens,
   displayFontFamily,
@@ -173,9 +174,12 @@ export default function DiscoveryScreen() {
 
           <View style={styles.scoreRow}>
             <View style={styles.scoreCard}>
-              <Text style={styles.scoreLabel}>DISTANCE</Text>
+              <Text style={styles.scoreLabel}>DISTANCE · TIME</Text>
               <Text style={styles.scoreValue} testID="text-route-distance">
-                {generatedDrive.route.distance_km.toFixed(1)} km
+                {formatRouteSummary(
+                  generatedDrive.route.distance_km,
+                  generatedDrive.route.duration_min,
+                )}
               </Text>
             </View>
             <View style={styles.scoreCard}>

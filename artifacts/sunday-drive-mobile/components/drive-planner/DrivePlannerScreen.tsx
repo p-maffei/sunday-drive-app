@@ -295,6 +295,7 @@ export default function DrivePlannerScreen() {
         !('geojson' in payload) ||
         !('distance_km' in payload) ||
         typeof payload.distance_km !== 'number' ||
+        ('duration_min' in payload && typeof payload.duration_min !== 'number') ||
         !('match_pct' in payload) ||
         (payload.match_pct !== null && typeof payload.match_pct !== 'number') ||
         !('breakdown' in payload)
