@@ -243,7 +243,7 @@ export default function DrivePlannerScreen() {
       setFormError('Choose a destination from the suggestions to generate a route.');
       return;
     }
-    const routeApiUrl = process.env.EXPO_PUBLIC_ROUTE_API_URL?.replace(/\/+$/, '');
+    const routeApiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '');
     if (!routeApiUrl) {
       setFormError('Route generation is temporarily unavailable. Please try again later.');
       return;
@@ -281,10 +281,8 @@ export default function DrivePlannerScreen() {
       }
       if (!response.ok) {
         const serverMessage = payload && typeof payload === 'object'
-          ? 'error' in payload && typeof payload.error === 'string'
-            ? payload.error
-            : 'message' in payload && typeof payload.message === 'string'
-              ? payload.message
+          ? 'detail' in payload && typeof payload.detail === 'string'
+            ? payload.detail
               : null
           : null;
         throw new Error(serverMessage ?? 'We couldn’t find a route right now.');
@@ -296,7 +294,7 @@ export default function DrivePlannerScreen() {
         !('distance_km' in payload) ||
         typeof payload.distance_km !== 'number' ||
         !('match_pct' in payload) ||
-        typeof payload.match_pct !== 'number' ||
+        (payload.match_pct !== null && typeof payload.match_pct !== 'number') ||
         !('breakdown' in payload)
       ) {
         throw new Error('The route service returned an incomplete route. Please try again.');

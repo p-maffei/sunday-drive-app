@@ -181,7 +181,9 @@ export default function DiscoveryScreen() {
             <View style={styles.scoreCard}>
               <Text style={styles.scoreLabel}>PREFERENCE MATCH</Text>
               <Text style={styles.scoreValue} testID="text-route-match">
-                {generatedDrive.route.match_pct}%
+                {generatedDrive.route.match_pct === null
+                  ? '—'
+                  : `${generatedDrive.route.match_pct}%`}
               </Text>
             </View>
           </View>

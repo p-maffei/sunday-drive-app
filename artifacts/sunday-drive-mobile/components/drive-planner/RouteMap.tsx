@@ -35,15 +35,9 @@ function getRouteBounds(geojson: RouteResult['geojson']): [number, number, numbe
       collect(geometry.coordinates);
     }
   };
-  if (geojson.type === 'FeatureCollection') {
-    geojson.features.forEach((feature) => {
-      if (feature.geometry) collectGeometry(feature.geometry);
-    });
-  } else if (geojson.type === 'Feature') {
-    if (geojson.geometry) collectGeometry(geojson.geometry);
-  } else {
-    collectGeometry(geojson);
-  }
+  geojson.features.forEach((feature) => {
+    if (feature.geometry) collectGeometry(feature.geometry);
+  });
 
   if (!coordinates.length) {
     throw new Error('The route did not include usable map coordinates.');

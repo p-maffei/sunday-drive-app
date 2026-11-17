@@ -57,22 +57,25 @@ describe('drive planner behavior', () => {
       ok: true,
       json: async () => ({
         geojson: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [-118.1445, 34.1478],
-              [-118.2437, 34.0522],
-            ],
-          },
+          type: 'FeatureCollection',
+          features: [{
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [-118.1445, 34.1478],
+                [-118.2437, 34.0522],
+              ],
+            },
+          }],
         },
         distance_km: 30.5,
-        match_pct: 92,
-        breakdown: { curvy: 0.9 },
+        match_pct: null,
+        breakdown: { curvy: 21, backroads: 17, urban: 42 },
       }),
     } as Response);
-    process.env.EXPO_PUBLIC_ROUTE_API_URL = 'https://api.example.test';
+    process.env.EXPO_PUBLIC_API_URL = 'https://api.example.test';
     jest
       .mocked(useRouter)
       .mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
@@ -224,10 +227,42 @@ describe('drive planner behavior', () => {
     );
     expect(mockSetGeneratedDrive).toHaveBeenCalledWith(
       expect.objectContaining({
-        route: expect.objectContaining({ distance_km: 30.5, match_pct: 92 }),
+        route: expect.objectContaining({ distance_km: 30.5, match_pct: null }),
       }),
     );
     expect(mockRouter.push).toHaveBeenCalledWith('/discovery');
     expect(await screen.queryByTestId('error-drive-form')).toBeNull();
+  });
+
+  it('shows the API detail when route generation returns an error', async () => {
+    jest.mocked(globalThis.fetch).mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        detail: 'Point is outside the loaded area.',
+      }),
+    } as Response);
+    const screen = await render(<DrivePlannerScreen />);
+
+    await fireEvent(await screen.getByTestId('input-start-location'), 'focus');
+    await fireEvent.changeText(
+      await screen.getByTestId('input-start-location'),
+      'Pasadena, CA',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-start-location-suggestion-place-1'),
+    );
+    await fireEvent(await screen.getByTestId('input-destination'), 'focus');
+    await fireEvent.changeText(
+      await screen.getByTestId('input-destination'),
+      'Santa Monica',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-destination-suggestion-place-1'),
+    );
+    await fireEvent.press(await screen.getByTestId('button-find-drive'));
+
+    expect(await screen.findByText('Point is outside the loaded area.')).toBeTruthy();
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });

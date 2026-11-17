@@ -1,20 +1,16 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import type { Feature, FeatureCollection, Geometry } from 'geojson';
+import type { FeatureCollection, Geometry } from 'geojson';
 import type { GeocodedLocation } from './types';
 
-export interface RouteBreakdownItem {
-  label?: string;
-  name?: string;
-  score?: number | string;
-  value?: number | string;
-  [key: string]: unknown;
-}
+export type RouteBreakdown = Partial<
+  Record<'curvy' | 'backroads' | 'urban', number>
+>;
 
 export interface RouteResult {
-  geojson: Geometry | Feature<Geometry> | FeatureCollection<Geometry>;
+  geojson: FeatureCollection<Geometry>;
   distance_km: number;
-  match_pct: number;
-  breakdown: RouteBreakdownItem[] | Record<string, unknown>;
+  match_pct: number | null;
+  breakdown: RouteBreakdown;
 }
 
 export interface GeneratedDrive {
