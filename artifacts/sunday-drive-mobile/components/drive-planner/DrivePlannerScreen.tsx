@@ -16,7 +16,8 @@ import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollV
 import { designTokens } from '@/constants/designTokens';
 import { theme } from '@/constants/theme';
 import RoutePreferencesSection from './RoutePreferencesSection';
-import { useRouteResult, type RouteResult } from './RouteResultContext';
+import { useRouteResult } from './RouteResultContext';
+import { clampWanderBudget, parseWanderResponse } from './wanderResponse';
 import ScoreExplanation from './ScoreExplanation';
 import TripBasicsSection from './TripBasicsSection';
 import VehicleProfileSection from './VehicleProfileSection';
@@ -231,13 +232,17 @@ export default function DrivePlannerScreen() {
     setFormError('');
     setGeneratedDrive(null);
     setIsGenerating(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60_000);
     try {
-      const response = await fetch(`${routeApiUrl}/route`, {
+      const response = await fetch(`${routeApiUrl}/wander`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           start: [startLocation.longitude, startLocation.latitude],
           end: [destinationLocation.longitude, destinationLocation.latitude],
+          time_budget_min: clampWanderBudget(durationMinutes),
           preferences,
           strength: 7,
         }),
@@ -246,9 +251,15 @@ export default function DrivePlannerScreen() {
       try {
         payload = await response.json();
       } catch {
+        if (response.status === 504) {
+          throw new Error('That took too long, try a shorter time');
+        }
         throw new Error('The route service returned an unreadable response. Please try again.');
       }
       if (!response.ok) {
+        if (response.status === 504) {
+          throw new Error('That took too long, try a shorter time');
+        }
         const serverMessage = payload && typeof payload === 'object'
           ? 'detail' in payload && typeof payload.detail === 'string'
             ? payload.detail
@@ -256,34 +267,26 @@ export default function DrivePlannerScreen() {
           : null;
         throw new Error(serverMessage ?? 'We couldn’t find a route right now.');
       }
-      if (
-        !payload ||
-        typeof payload !== 'object' ||
-        !('geojson' in payload) ||
-        !('distance_km' in payload) ||
-        typeof payload.distance_km !== 'number' ||
-        ('duration_min' in payload && typeof payload.duration_min !== 'number') ||
-        !('match_pct' in payload) ||
-        (payload.match_pct !== null && typeof payload.match_pct !== 'number') ||
-        !('breakdown' in payload)
-      ) {
-        throw new Error('The route service returned an incomplete route. Please try again.');
-      }
+      const wander = parseWanderResponse(payload);
       setGeneratedDrive({
-        route: payload as RouteResult,
+        ...wander,
+        selectedOptionRank: wander.options[0].rank,
         start: startLocation,
         end: destinationLocation,
       });
       router.push('/discovery');
     } catch (error) {
       setFormError(
-        error instanceof TypeError
+        error instanceof Error && error.name === 'AbortError'
+          ? 'That took too long, try a shorter time'
+          : error instanceof TypeError
           ? 'We couldn’t connect to the route service. Check your connection and try again.'
           : error instanceof Error
           ? error.message
           : 'We couldn’t find a route right now. Please try again.',
       );
     } finally {
+      clearTimeout(timeoutId);
       setIsGenerating(false);
     }
   }
@@ -415,7 +418,7 @@ export default function DrivePlannerScreen() {
         >
           {isGenerating ? (
             <>
-              <Text style={styles.submitText}>Finding your drive…</Text>
+              <Text style={styles.submitText}>Finding your drive...</Text>
               <ActivityIndicator size="small" color={theme.colors.accentText} testID="loading-route" />
             </>
           ) : (

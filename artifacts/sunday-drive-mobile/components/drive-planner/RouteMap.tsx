@@ -9,7 +9,7 @@ import {
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import { designTokens } from '@/constants/designTokens';
 import type { GeocodedLocation } from './types';
-import type { RouteResult } from './RouteResultContext';
+import type { RouteResult, WanderWaypoint } from './RouteResultContext';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -58,14 +58,37 @@ function getRouteBounds(geojson: RouteResult['geojson']): [number, number, numbe
 
 export default function RouteMap({
   route,
+  comparisonRoutes,
   start,
   end,
+  waypoint,
 }: {
   route: RouteResult;
+  comparisonRoutes: RouteResult[];
   start: GeocodedLocation;
   end: GeocodedLocation;
+  waypoint: WanderWaypoint | null;
 }) {
-  const bounds = useMemo(() => getRouteBounds(route.geojson), [route.geojson]);
+  const allRoutes = useMemo<FeatureCollection<Geometry>>(
+    () => ({
+      type: 'FeatureCollection',
+      features: [
+        ...route.geojson.features,
+        ...comparisonRoutes.flatMap((item) => item.geojson.features),
+      ],
+    }),
+    [comparisonRoutes, route.geojson],
+  );
+  const bounds = useMemo(() => {
+    const routeBounds = getRouteBounds(allRoutes);
+    if (!waypoint) return routeBounds;
+    return [
+      Math.min(routeBounds[0], waypoint.lon),
+      Math.min(routeBounds[1], waypoint.lat),
+      Math.max(routeBounds[2], waypoint.lon),
+      Math.max(routeBounds[3], waypoint.lat),
+    ] as [number, number, number, number];
+  }, [allRoutes, waypoint]);
   const endpoints = useMemo<FeatureCollection<Geometry>>(
     () => ({
       type: 'FeatureCollection',
@@ -86,21 +109,46 @@ export default function RouteMap({
             coordinates: [end.longitude, end.latitude],
           },
         },
+        ...(waypoint
+          ? [{
+              type: 'Feature' as const,
+              properties: { label: 'Waypoint', kind: 'waypoint' },
+              geometry: {
+                type: 'Point' as const,
+                coordinates: [waypoint.lon, waypoint.lat],
+              },
+            }]
+          : []),
       ],
     }),
-    [end.latitude, end.longitude, start.latitude, start.longitude],
+    [end.latitude, end.longitude, start.latitude, start.longitude, waypoint],
   );
 
   return (
     <View style={styles.frame} testID="map-route">
       <Map style={styles.map} mapStyle={OPENFREEMAP_STYLE}>
         <Camera
+          key={`${'rank' in route ? route.rank : route.distance_km}-${comparisonRoutes.length}-${waypoint?.lon ?? ''}-${waypoint?.lat ?? ''}`}
           initialViewState={{
             bounds,
             padding: { top: 48, right: 36, bottom: 48, left: 36 },
           }}
           testID="camera-route-bounds"
         />
+        <GeoJSONSource
+          id="comparison-routes"
+          data={{
+            type: 'FeatureCollection',
+            features: comparisonRoutes.flatMap((item) => item.geojson.features),
+          }}
+        >
+          <Layer
+            id="comparison-route-lines"
+            type="line"
+            paint={{ 'line-color': '#929997', 'line-width': 3, 'line-opacity': 0.8 }}
+            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+          />
+        </GeoJSONSource>
         <GeoJSONSource id="generated-route" data={route.geojson}>
           <Layer
             id="generated-route-line"
@@ -132,6 +180,18 @@ export default function RouteMap({
               'circle-stroke-color': '#FFFFFF',
               'circle-stroke-width': 2,
             }}
+          />
+          <Layer
+            id="route-endpoint-labels"
+            type="symbol"
+            layout={{
+              'text-field': ['get', 'label'],
+              'text-size': 12,
+              'text-offset': [0, 1.4],
+              'text-anchor': 'top',
+              'text-allow-overlap': true,
+            }}
+            paint={{ 'text-color': '#FFFFFF', 'text-halo-color': '#202322', 'text-halo-width': 1.5 }}
           />
         </GeoJSONSource>
       </Map>

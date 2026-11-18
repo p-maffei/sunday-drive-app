@@ -14,8 +14,23 @@ export interface RouteResult {
   breakdown: RouteBreakdown;
 }
 
+export interface WanderWaypoint {
+  lon: number;
+  lat: number;
+}
+
+export interface WanderOption extends RouteResult {
+  rank: number;
+  waypoint: WanderWaypoint | null;
+  fun_km: number;
+  reused_km: number;
+}
+
 export interface GeneratedDrive {
-  route: RouteResult;
+  budget_min: number;
+  note: string | null;
+  options: WanderOption[];
+  selectedOptionRank: number;
   start: GeocodedLocation;
   end: GeocodedLocation;
 }
@@ -23,15 +38,25 @@ export interface GeneratedDrive {
 interface RouteResultContextValue {
   generatedDrive: GeneratedDrive | null;
   setGeneratedDrive: (drive: GeneratedDrive | null) => void;
+  selectWanderOption: (rank: number) => void;
 }
 
 const RouteResultContext = createContext<RouteResultContextValue | null>(null);
 
 export function RouteResultProvider({ children }: { children: ReactNode }) {
   const [generatedDrive, setGeneratedDrive] = useState<GeneratedDrive | null>(null);
+  const selectWanderOption = (rank: number) => {
+    setGeneratedDrive((current) =>
+      current?.options.some((option) => option.rank === rank)
+        ? { ...current, selectedOptionRank: rank }
+        : current,
+    );
+  };
 
   return (
-    <RouteResultContext.Provider value={{ generatedDrive, setGeneratedDrive }}>
+    <RouteResultContext.Provider
+      value={{ generatedDrive, setGeneratedDrive, selectWanderOption }}
+    >
       {children}
     </RouteResultContext.Provider>
   );

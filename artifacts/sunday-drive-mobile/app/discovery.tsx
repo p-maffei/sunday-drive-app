@@ -10,7 +10,13 @@ import { theme } from '@/constants/theme';
 export default function DiscoveryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { generatedDrive } = useRouteResult();
+  const { generatedDrive, selectWanderOption } = useRouteResult();
+  const selectedOption = generatedDrive?.options.find(
+    (option) => option.rank === generatedDrive.selectedOptionRank,
+  ) ?? generatedDrive?.options[0];
+  const comparisonRoutes = generatedDrive?.options.filter(
+    (option) => option.rank !== selectedOption?.rank,
+  ) ?? [];
 
   const styles = StyleSheet.create({
     screen: {
@@ -52,6 +58,40 @@ export default function DiscoveryScreen() {
     scoreRow: {
       flexDirection: 'row',
       gap: 12,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    optionCard: {
+      flexGrow: 1,
+      minWidth: 140,
+      padding: 12,
+      gap: 5,
+      ...theme.cards.bordered,
+    },
+    selectedOptionCard: {
+      borderColor: theme.colors.accent,
+      backgroundColor: '#34302E',
+    },
+    optionTitle: {
+      ...theme.text.scoreLabel,
+      color: theme.colors.primaryText,
+    },
+    optionSummary: {
+      ...theme.text.breakdownLabel,
+      color: theme.colors.primaryText,
+    },
+    noteBanner: {
+      padding: 13,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.accent,
+      backgroundColor: theme.colors.surface,
+    },
+    noteText: {
+      ...theme.text.intro,
+      color: theme.colors.primaryText,
     },
     scoreCard: {
       flex: 1,
@@ -101,13 +141,13 @@ export default function DiscoveryScreen() {
     },
   });
 
-  const breakdownEntries = generatedDrive
-    ? Array.isArray(generatedDrive.route.breakdown)
-      ? generatedDrive.route.breakdown.map((item, index) => [
+  const breakdownEntries = selectedOption
+    ? Array.isArray(selectedOption.breakdown)
+      ? selectedOption.breakdown.map((item, index) => [
           item.label ?? item.name ?? `Factor ${index + 1}`,
           item.score ?? item.value ?? '—',
         ] as const)
-      : Object.entries(generatedDrive.route.breakdown)
+      : Object.entries(selectedOption.breakdown)
     : [];
 
   return (
@@ -123,7 +163,7 @@ export default function DiscoveryScreen() {
         <Text style={styles.backText}>Back to planner</Text>
       </Pressable>
 
-      {generatedDrive ? (
+      {generatedDrive && selectedOption ? (
         <>
           <View>
             <Text style={styles.eyebrow}>YOUR SUNDAY DRIVE</Text>
@@ -132,10 +172,39 @@ export default function DiscoveryScreen() {
             </Text>
           </View>
 
+          {generatedDrive.note ? (
+            <View style={styles.noteBanner} testID="wander-note">
+              <Text style={styles.noteText}>{generatedDrive.note}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.optionRow} accessibilityRole="tablist">
+            {generatedDrive.options.map((option) => {
+              const selected = option.rank === selectedOption.rank;
+              return (
+                <Pressable
+                  key={option.rank}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => selectWanderOption(option.rank)}
+                  style={[styles.optionCard, selected && styles.selectedOptionCard]}
+                  testID={`button-wander-option-${option.rank}`}
+                >
+                  <Text style={styles.optionTitle}>Option {option.rank}</Text>
+                  <Text style={styles.optionSummary}>
+                    {formatRouteSummary(option.distance_km, option.duration_min)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <RouteMap
-            route={generatedDrive.route}
+            route={selectedOption}
+            comparisonRoutes={comparisonRoutes}
             start={generatedDrive.start}
             end={generatedDrive.end}
+            waypoint={selectedOption.waypoint}
           />
 
           <View style={styles.scoreRow}>
@@ -143,17 +212,17 @@ export default function DiscoveryScreen() {
               <Text style={styles.scoreLabel}>DISTANCE · TIME</Text>
               <Text style={styles.scoreValue} testID="text-route-distance">
                 {formatRouteSummary(
-                  generatedDrive.route.distance_km,
-                  generatedDrive.route.duration_min,
+                  selectedOption.distance_km,
+                  selectedOption.duration_min,
                 )}
               </Text>
             </View>
             <View style={styles.scoreCard}>
               <Text style={styles.scoreLabel}>PREFERENCE MATCH</Text>
               <Text style={styles.scoreValue} testID="text-route-match">
-                {generatedDrive.route.match_pct === null
+                {selectedOption.match_pct === null
                   ? '—'
-                  : `${generatedDrive.route.match_pct}%`}
+                  : `${selectedOption.match_pct}%`}
               </Text>
             </View>
           </View>

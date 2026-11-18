@@ -56,23 +56,32 @@ describe('drive planner behavior', () => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({
-        geojson: {
-          type: 'FeatureCollection',
-          features: [{
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: [
-                [-118.1445, 34.1478],
-                [-118.2437, 34.0522],
-              ],
-            },
-          }],
-        },
-        distance_km: 30.5,
-        match_pct: null,
-        breakdown: { curvy: 21, backroads: 17, urban: 42 },
+        budget_min: 120,
+        note: null,
+        options: [{
+          rank: 1,
+          waypoint: null,
+          distance_km: 30.5,
+          duration_min: 39,
+          match_pct: null,
+          breakdown: { curvy: 21, backroads: 17, urban: 42 },
+          fun_km: 20,
+          reused_km: 0,
+          geojson: {
+            type: 'FeatureCollection',
+            features: [{
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  [-118.1445, 34.1478],
+                  [-118.2437, 34.0522],
+                ],
+              },
+            }],
+          },
+        }],
       }),
     } as Response);
     process.env.EXPO_PUBLIC_API_URL = 'https://api.example.test';
@@ -225,12 +234,13 @@ describe('drive planner behavior', () => {
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'https://api.example.test/route',
+      'https://api.example.test/wander',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
           start: [-118.1445, 34.1478],
           end: [-118.1445, 34.1478],
+          time_budget_min: 120,
           preferences: ['curvy', 'urban'],
           strength: 7,
         }),
@@ -238,7 +248,14 @@ describe('drive planner behavior', () => {
     );
     expect(mockSetGeneratedDrive).toHaveBeenCalledWith(
       expect.objectContaining({
-        route: expect.objectContaining({ distance_km: 30.5, match_pct: null }),
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            distance_km: 30.5,
+            duration_min: 39,
+            match_pct: null,
+          }),
+        ]),
+        selectedOptionRank: 1,
       }),
     );
     expect(mockRouter.push).toHaveBeenCalledWith('/discovery');
@@ -275,5 +292,36 @@ describe('drive planner behavior', () => {
 
     expect(await screen.findByText('Point is outside the loaded area.')).toBeTruthy();
     expect(mockRouter.push).not.toHaveBeenCalled();
+  });
+
+  it('shows friendly guidance when the wander API times out', async () => {
+    jest.mocked(globalThis.fetch).mockResolvedValue({
+      ok: false,
+      status: 504,
+      json: async () => ({ detail: 'Gateway timeout' }),
+    } as Response);
+    const screen = await render(<DrivePlannerScreen />);
+
+    await fireEvent(await screen.getByTestId('input-start-location'), 'focus');
+    await fireEvent.changeText(
+      await screen.getByTestId('input-start-location'),
+      'Pasadena, CA',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-start-location-suggestion-place-1'),
+    );
+    await fireEvent(await screen.getByTestId('input-destination'), 'focus');
+    await fireEvent.changeText(
+      await screen.getByTestId('input-destination'),
+      'Santa Monica',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('input-destination-suggestion-place-1'),
+    );
+    await fireEvent.press(await screen.getByTestId('button-find-drive'));
+
+    expect(
+      await screen.findByText('That took too long, try a shorter time'),
+    ).toBeTruthy();
   });
 });

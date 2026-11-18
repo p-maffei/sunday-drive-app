@@ -11,11 +11,13 @@ import {
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Geometry } from 'geojson';
 import type { GeocodedLocation } from './types';
-import type { RouteResult } from './RouteResultContext';
+import type { RouteResult, WanderWaypoint } from './RouteResultContext';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 const ROUTE_SOURCE_ID = 'generated-route';
 const ROUTE_LAYER_ID = 'generated-route-line';
+const COMPARISON_SOURCE_ID = 'comparison-routes';
+const COMPARISON_LAYER_ID = 'comparison-route-lines';
 
 setWorkerUrl(
   `https://unpkg.com/maplibre-gl@${getVersion()}/dist/maplibre-gl-worker.mjs`,
@@ -23,8 +25,10 @@ setWorkerUrl(
 
 type RouteMapProps = {
   route: RouteResult;
+  comparisonRoutes: RouteResult[];
   start: GeocodedLocation;
   end: GeocodedLocation;
+  waypoint: WanderWaypoint | null;
 };
 
 function extendBounds(bounds: LngLatBounds, value: unknown) {
@@ -54,10 +58,29 @@ function collectGeometryBounds(
 function updateMap(
   map: MapLibreMap,
   route: RouteResult,
+  comparisonRoutes: RouteResult[],
   start: GeocodedLocation,
   end: GeocodedLocation,
+  waypoint: WanderWaypoint | null,
   markers: Marker[],
 ) {
+  const comparisonData = {
+    type: 'FeatureCollection' as const,
+    features: comparisonRoutes.flatMap((item) => item.geojson.features),
+  };
+  const comparisonSource = map.getSource(COMPARISON_SOURCE_ID) as GeoJSONSource | undefined;
+  if (comparisonSource) comparisonSource.setData(comparisonData);
+  else map.addSource(COMPARISON_SOURCE_ID, { type: 'geojson', data: comparisonData });
+  if (!map.getLayer(COMPARISON_LAYER_ID)) {
+    map.addLayer({
+      id: COMPARISON_LAYER_ID,
+      type: 'line',
+      source: COMPARISON_SOURCE_ID,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#929997', 'line-width': 3, 'line-opacity': 0.8 },
+    });
+  }
+
   const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined;
   if (source) {
     source.setData(route.geojson);
@@ -97,11 +120,26 @@ function updateMap(
       .setPopup(new Popup({ offset: 18 }).setText('End'))
       .addTo(map),
   );
+  if (waypoint) {
+    const label = document.createElement('div');
+    label.textContent = 'Waypoint';
+    label.style.cssText =
+      'padding:4px 8px;border:1px solid #E78377;border-radius:12px;background:#202322;color:#fff;font:12px sans-serif;white-space:nowrap;';
+    markers.push(
+      new Marker({ element: label, anchor: 'bottom' })
+        .setLngLat([waypoint.lon, waypoint.lat])
+        .setPopup(new Popup({ offset: 18 }).setText('Waypoint'))
+        .addTo(map),
+    );
+  }
 
   const bounds = new LngLatBounds();
-  route.geojson.features.forEach((feature) => {
-    if (feature.geometry) collectGeometryBounds(bounds, feature.geometry);
-  });
+  [route, ...comparisonRoutes].forEach((item) =>
+    item.geojson.features.forEach((feature) => {
+      if (feature.geometry) collectGeometryBounds(bounds, feature.geometry);
+    }),
+  );
+  if (waypoint) bounds.extend([waypoint.lon, waypoint.lat]);
   if (!bounds.isEmpty()) {
     map.fitBounds(bounds, {
       padding: { top: 48, right: 40, bottom: 48, left: 40 },
@@ -111,12 +149,18 @@ function updateMap(
   }
 }
 
-export default function RouteMap({ route, start, end }: RouteMapProps) {
+export default function RouteMap({
+  route,
+  comparisonRoutes,
+  start,
+  end,
+  waypoint,
+}: RouteMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
-  const latestPropsRef = useRef({ route, start, end });
-  latestPropsRef.current = { route, start, end };
+  const latestPropsRef = useRef({ route, comparisonRoutes, start, end, waypoint });
+  latestPropsRef.current = { route, comparisonRoutes, start, end, waypoint };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -130,7 +174,7 @@ export default function RouteMap({ route, start, end }: RouteMapProps) {
 
     map.once('load', () => {
       const latest = latestPropsRef.current;
-      updateMap(map, latest.route, latest.start, latest.end, markersRef.current);
+      updateMap(map, latest.route, latest.comparisonRoutes, latest.start, latest.end, latest.waypoint, markersRef.current);
     });
 
     return () => {
@@ -144,9 +188,9 @@ export default function RouteMap({ route, start, end }: RouteMapProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (map?.isStyleLoaded()) {
-      updateMap(map, route, start, end, markersRef.current);
+      updateMap(map, route, comparisonRoutes, start, end, waypoint, markersRef.current);
     }
-  }, [route, start, end]);
+  }, [route, comparisonRoutes, start, end, waypoint]);
 
   return (
     <div
