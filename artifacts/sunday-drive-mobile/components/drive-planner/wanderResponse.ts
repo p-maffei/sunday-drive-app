@@ -7,7 +7,11 @@ import type {
 } from './RouteResultContext';
 
 export interface WanderResponse {
-  fastest: FastestRoute;
+  fastest: {
+    duration_min: number;
+    distance_km: number;
+    scores: RouteBreakdown;
+  };
   extra_min: number;
   budget_min: number;
   style: string[];
@@ -46,13 +50,14 @@ function isScoreRecord(value: unknown): value is RouteBreakdown {
   );
 }
 
-function isFastestRoute(value: unknown): value is FastestRoute {
+function isFastestSummary(
+  value: unknown,
+): value is WanderResponse['fastest'] {
   return (
     isRecord(value) &&
     typeof value.duration_min === 'number' &&
     typeof value.distance_km === 'number' &&
-    isScoreRecord(value.scores) &&
-    isFeatureCollection(value.geojson)
+    isScoreRecord(value.scores)
   );
 }
 
@@ -95,7 +100,7 @@ export function parseFastestResponse(payload: unknown): FastestRoute {
 export function parseWanderResponse(payload: unknown): WanderResponse {
   if (
     !isRecord(payload) ||
-    !isFastestRoute(payload.fastest) ||
+    !isFastestSummary(payload.fastest) ||
     typeof payload.extra_min !== 'number' ||
     typeof payload.budget_min !== 'number' ||
     !Array.isArray(payload.style) ||

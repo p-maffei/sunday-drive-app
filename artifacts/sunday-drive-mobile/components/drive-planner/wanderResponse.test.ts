@@ -21,7 +21,6 @@ const validResponse = {
     duration_min: 100,
     distance_km: 20,
     scores: { curvy: 31, backroads: 40, urban: 12 },
-    geojson: routeGeoJSON,
   },
   extra_min: 20,
   budget_min: 120,
@@ -55,6 +54,7 @@ describe('parseWanderResponse', () => {
         ...validResponse.options[0],
         rank,
         waypoint: null,
+      match_pct: null,
       })),
     };
 

@@ -27,8 +27,9 @@ export interface WanderOption extends RouteResult {
   reused_km: number;
 }
 
-export interface FastestRoute extends RouteResult {
+export interface FastestRoute extends Omit<RouteResult, 'geojson'> {
   duration_min: number;
+  geojson?: RouteResult['geojson'];
 }
 
 export interface GeneratedDrive {

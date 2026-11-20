@@ -349,8 +349,11 @@ export default function DrivePlannerScreen() {
       setGeneratedDrive({
         ...wander,
         fastest: {
-          ...wander.fastest,
+          duration_min: wander.fastest.duration_min,
+          distance_km: wander.fastest.distance_km,
+          breakdown: wander.fastest.scores,
           match_pct: null,
+          ...(fastestRoute ? { geojson: fastestRoute.geojson } : {}),
         },
         selectedOptionRank: wander.options[0].rank,
         start: startLocation,

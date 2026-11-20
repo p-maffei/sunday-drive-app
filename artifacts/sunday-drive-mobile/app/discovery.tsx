@@ -20,7 +20,12 @@ export default function DiscoveryScreen() {
   const comparisonRoutes: RouteResult[] = generatedDrive?.options.filter(
     (option) => option.rank !== selectedOption?.rank,
   ) ?? [];
-  if (generatedDrive) comparisonRoutes.push(generatedDrive.fastest);
+  if (generatedDrive?.fastest.geojson) {
+    comparisonRoutes.push({
+      ...generatedDrive.fastest,
+      geojson: generatedDrive.fastest.geojson,
+    });
+  }
 
   const styles = StyleSheet.create({
     screen: {
