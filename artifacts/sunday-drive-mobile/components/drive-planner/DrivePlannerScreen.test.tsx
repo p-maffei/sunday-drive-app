@@ -53,37 +53,77 @@ describe('drive planner behavior', () => {
   beforeEach(() => {
     mockRouter.push.mockClear();
     mockSetGeneratedDrive.mockClear();
-    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        budget_min: 120,
-        note: null,
-        options: [{
-          rank: 1,
-          waypoint: null,
-          distance_km: 30.5,
-          duration_min: 39,
-          match_pct: null,
-          breakdown: { curvy: 21, backroads: 17, urban: 42 },
-          fun_km: 20,
-          reused_km: 0,
-          geojson: {
-            type: 'FeatureCollection',
-            features: [{
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: [
-                  [-118.1445, 34.1478],
-                  [-118.2437, 34.0522],
-                ],
+    jest.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const isFastest = String(input).endsWith('/fastest');
+      return {
+        ok: true,
+        json: async () => isFastest
+          ? {
+              fastest_min: 28,
+              distance_km: 28,
+              scores: { curvy: 31, backroads: 17, urban: 42 },
+              geojson: {
+                type: 'FeatureCollection',
+                features: [{
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: [[-118.1445, 34.1478], [-118.2437, 34.0522]],
+                  },
+                }],
               },
-            }],
-          },
-        }],
-      }),
-    } as Response);
+            }
+          : {
+              fastest: {
+                duration_min: 28,
+                distance_km: 28,
+                scores: { curvy: 31, backroads: 17, urban: 42 },
+                geojson: {
+                  type: 'FeatureCollection',
+                  features: [{
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                      type: 'LineString',
+                      coordinates: [[-118.1445, 34.1478], [-118.2437, 34.0522]],
+                    },
+                  }],
+                },
+              },
+              extra_min: 120,
+              budget_min: 120,
+              style: ['curvy', 'backroads'],
+              style_defaulted: false,
+              note: null,
+              options: [{
+                rank: 1,
+                waypoint: null,
+                distance_km: 30.5,
+                duration_min: 39,
+                extra_min: 11,
+                match_pct: null,
+                breakdown: { curvy: 21, backroads: 17, urban: 42 },
+                fun_km: 20,
+                reused_km: 0,
+                geojson: {
+                  type: 'FeatureCollection',
+                  features: [{
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                      type: 'LineString',
+                      coordinates: [
+                        [-118.1445, 34.1478],
+                        [-118.2437, 34.0522],
+                      ],
+                    },
+                  }],
+                },
+              }],
+            },
+      } as Response;
+    });
     process.env.EXPO_PUBLIC_API_URL = 'https://api.example.test';
     jest
       .mocked(useRouter)
@@ -134,12 +174,14 @@ describe('drive planner behavior', () => {
 
   it('shows only supported preferences and keeps urban and backroads exclusive', async () => {
     const screen = await render(<DrivePlannerScreen />);
+    expect(await screen.getByTestId('text-default-route-style')).toBeTruthy();
     const curvy = await screen.getByTestId('preference-curvy');
     const backroads = await screen.getByTestId('preference-backroads');
     const urban = await screen.getByTestId('preference-urban');
     expect(await screen.getAllByTestId(/^preference-/)).toHaveLength(3);
 
     await fireEvent.press(curvy);
+    expect(await screen.queryByTestId('text-default-route-style')).toBeNull();
     await fireEvent.press(backroads);
     expect(curvy.props.accessibilityState).toEqual({ checked: true });
     expect(backroads.props.accessibilityState).toEqual({ checked: true });
@@ -240,12 +282,27 @@ describe('drive planner behavior', () => {
         body: JSON.stringify({
           start: [-118.1445, 34.1478],
           end: [-118.1445, 34.1478],
-          time_budget_min: 120,
+          extra_min: 120,
           preferences: ['curvy', 'urban'],
           strength: 7,
         }),
       }),
     );
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://api.example.test/fastest',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          start: [-118.1445, 34.1478],
+          end: [-118.1445, 34.1478],
+        }),
+      }),
+    );
+    expect(
+      jest.mocked(globalThis.fetch).mock.calls.filter(([url]) =>
+        String(url).endsWith('/fastest'),
+      ),
+    ).toHaveLength(1);
     expect(mockSetGeneratedDrive).toHaveBeenCalledWith(
       expect.objectContaining({
         options: expect.arrayContaining([
@@ -290,7 +347,9 @@ describe('drive planner behavior', () => {
     );
     await fireEvent.press(await screen.getByTestId('button-find-drive'));
 
-    expect(await screen.findByText('Point is outside the loaded area.')).toBeTruthy();
+    expect(
+      (await screen.findByTestId('error-drive-form')).props.children,
+    ).toBe('Point is outside the loaded area.');
     expect(mockRouter.push).not.toHaveBeenCalled();
   });
 

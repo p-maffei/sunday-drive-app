@@ -22,12 +22,21 @@ export interface WanderWaypoint {
 export interface WanderOption extends RouteResult {
   rank: number;
   waypoint: WanderWaypoint | null;
+  extra_min: number;
   fun_km: number;
   reused_km: number;
 }
 
+export interface FastestRoute extends RouteResult {
+  duration_min: number;
+}
+
 export interface GeneratedDrive {
+  fastest: FastestRoute;
+  extra_min: number;
   budget_min: number;
+  style: string[];
+  style_defaulted: boolean;
   note: string | null;
   options: WanderOption[];
   selectedOptionRank: number;

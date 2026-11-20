@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { Michroma_400Regular, useFonts } from '@expo-google-fonts/michroma';
 import { useRouter } from 'expo-router';
@@ -16,8 +16,8 @@ import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollV
 import { designTokens } from '@/constants/designTokens';
 import { theme } from '@/constants/theme';
 import RoutePreferencesSection from './RoutePreferencesSection';
-import { useRouteResult } from './RouteResultContext';
-import { clampWanderBudget, parseWanderResponse } from './wanderResponse';
+import { useRouteResult, type FastestRoute } from './RouteResultContext';
+import { parseFastestResponse, parseWanderResponse } from './wanderResponse';
 import ScoreExplanation from './ScoreExplanation';
 import TripBasicsSection from './TripBasicsSection';
 import VehicleProfileSection from './VehicleProfileSection';
@@ -57,6 +57,9 @@ export default function DrivePlannerScreen() {
   const [roundTrip, setRoundTrip] = useState(false);
   const [anywhere, setAnywhere] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(120);
+  const [fastestRoute, setFastestRoute] = useState<FastestRoute | null>(null);
+  const [isLoadingFastest, setIsLoadingFastest] = useState(false);
+  const [fastestError, setFastestError] = useState('');
   const [preferences, setPreferences] = useState<RoutePreference[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
@@ -65,6 +68,72 @@ export default function DrivePlannerScreen() {
   const [vehicleError, setVehicleError] = useState('');
   const [formError, setFormError] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const fastestRequestKey = useRef('');
+
+  useEffect(() => {
+    if (!startLocation || !destinationLocation) {
+      setFastestRoute(null);
+      setFastestError('');
+      setIsLoadingFastest(false);
+      fastestRequestKey.current = '';
+      return;
+    }
+
+    const key = [
+      startLocation.longitude,
+      startLocation.latitude,
+      destinationLocation.longitude,
+      destinationLocation.latitude,
+    ].join(',');
+    if (fastestRequestKey.current === key) return;
+    fastestRequestKey.current = key;
+
+    const routeApiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '');
+    if (!routeApiUrl) {
+      setFastestError('Fastest-route estimates are temporarily unavailable.');
+      return;
+    }
+
+    setFastestRoute(null);
+    setFastestError('');
+    setIsLoadingFastest(true);
+    void (async () => {
+      try {
+        const response = await fetch(`${routeApiUrl}/fastest`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            start: [startLocation.longitude, startLocation.latitude],
+            end: [destinationLocation.longitude, destinationLocation.latitude],
+          }),
+        });
+        const payload: unknown = await response.json();
+        if (!response.ok) {
+          const detail =
+            payload && typeof payload === 'object' && 'detail' in payload &&
+            typeof payload.detail === 'string'
+              ? payload.detail
+              : 'We couldn’t estimate the fastest route.';
+          throw new Error(detail);
+        }
+        const fastest = parseFastestResponse(payload);
+        if (fastestRequestKey.current === key) setFastestRoute(fastest);
+      } catch (error) {
+        if (fastestRequestKey.current === key) {
+          setFastestError(
+            error instanceof Error
+              ? error.message
+              : 'We couldn’t estimate the fastest route.',
+          );
+        }
+      } finally {
+        if (fastestRequestKey.current === key) setIsLoadingFastest(false);
+      }
+    })();
+  }, [startLocation, destinationLocation]);
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: theme.colors.background },
@@ -111,6 +180,15 @@ export default function DrivePlannerScreen() {
     intro: {
       marginBottom: 25,
       ...theme.text.intro,
+    },
+    fastestSummary: {
+      ...theme.text.intro,
+      marginTop: 2,
+      color: theme.colors.primaryText,
+    },
+    fastestError: {
+      ...theme.text.error,
+      marginTop: 2,
     },
     section: {
       marginTop: 24,
@@ -242,7 +320,7 @@ export default function DrivePlannerScreen() {
         body: JSON.stringify({
           start: [startLocation.longitude, startLocation.latitude],
           end: [destinationLocation.longitude, destinationLocation.latitude],
-          time_budget_min: clampWanderBudget(durationMinutes),
+          extra_min: durationMinutes,
           preferences,
           strength: 7,
         }),
@@ -270,6 +348,10 @@ export default function DrivePlannerScreen() {
       const wander = parseWanderResponse(payload);
       setGeneratedDrive({
         ...wander,
+        fastest: {
+          ...wander.fastest,
+          match_pct: null,
+        },
         selectedOptionRank: wander.options[0].rank,
         start: startLocation,
         end: destinationLocation,
@@ -336,12 +418,16 @@ export default function DrivePlannerScreen() {
             startLocation={startLocation}
             destinationLocation={destinationLocation}
             onStartChange={(value) => {
+              fastestRequestKey.current = '';
               setStart(value);
+              setFastestRoute(null);
               setStartLocation(null);
               setFormError('');
             }}
             onDestinationChange={(value) => {
+              fastestRequestKey.current = '';
               setDestination(value);
+              setFastestRoute(null);
               setDestinationLocation(null);
             }}
             onStartSelect={(location) => {
@@ -363,6 +449,22 @@ export default function DrivePlannerScreen() {
             }}
             onDurationChange={setDurationMinutes}
           />
+          {startLocation && destinationLocation ? (
+            isLoadingFastest ? (
+              <Text style={styles.fastestSummary} testID="loading-fastest-route">
+                Finding the fastest route...
+              </Text>
+            ) : fastestRoute ? (
+              <Text style={styles.fastestSummary} testID="text-fastest-route">
+                Fastest: {fastestRoute.duration_min} min (
+                {(fastestRoute.distance_km / 1.609344).toFixed(1)} mi)
+              </Text>
+            ) : fastestError ? (
+              <Text style={styles.fastestError} accessibilityRole="alert">
+                {fastestError}
+              </Text>
+            ) : null
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -372,6 +474,7 @@ export default function DrivePlannerScreen() {
           </View>
           <RoutePreferencesSection
             selected={preferences}
+            showDefaultHint={durationMinutes > 0 && preferences.length === 0}
             onToggle={togglePreference}
           />
         </View>

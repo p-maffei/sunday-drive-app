@@ -3,7 +3,10 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RouteMap from '@/components/drive-planner/RouteMap';
-import { useRouteResult } from '@/components/drive-planner/RouteResultContext';
+import {
+  useRouteResult,
+  type RouteResult,
+} from '@/components/drive-planner/RouteResultContext';
 import { formatRouteSummary } from '@/components/drive-planner/routeSummary';
 import { theme } from '@/constants/theme';
 
@@ -14,9 +17,10 @@ export default function DiscoveryScreen() {
   const selectedOption = generatedDrive?.options.find(
     (option) => option.rank === generatedDrive.selectedOptionRank,
   ) ?? generatedDrive?.options[0];
-  const comparisonRoutes = generatedDrive?.options.filter(
+  const comparisonRoutes: RouteResult[] = generatedDrive?.options.filter(
     (option) => option.rank !== selectedOption?.rank,
   ) ?? [];
+  if (generatedDrive) comparisonRoutes.push(generatedDrive.fastest);
 
   const styles = StyleSheet.create({
     screen: {
@@ -83,6 +87,10 @@ export default function DiscoveryScreen() {
       ...theme.text.breakdownLabel,
       color: theme.colors.primaryText,
     },
+    optionMatch: {
+      ...theme.text.breakdownLabel,
+      color: theme.colors.secondaryText,
+    },
     noteBanner: {
       padding: 13,
       borderLeftWidth: 3,
@@ -91,6 +99,10 @@ export default function DiscoveryScreen() {
     },
     noteText: {
       ...theme.text.intro,
+      color: theme.colors.primaryText,
+    },
+    styleDefault: {
+      ...theme.text.breakdownLabel,
       color: theme.colors.primaryText,
     },
     scoreCard: {
@@ -142,12 +154,11 @@ export default function DiscoveryScreen() {
   });
 
   const breakdownEntries = selectedOption
-    ? Array.isArray(selectedOption.breakdown)
-      ? selectedOption.breakdown.map((item, index) => [
-          item.label ?? item.name ?? `Factor ${index + 1}`,
-          item.score ?? item.value ?? '—',
-        ] as const)
-      : Object.entries(selectedOption.breakdown)
+    ? Object.entries(selectedOption.breakdown).map(([key, score]) => [
+        key,
+        generatedDrive?.fastest.breakdown[key as keyof typeof generatedDrive.fastest.breakdown],
+        score,
+      ] as const)
     : [];
 
   return (
@@ -178,6 +189,12 @@ export default function DiscoveryScreen() {
             </View>
           ) : null}
 
+          {generatedDrive.style_defaulted ? (
+            <Text style={styles.styleDefault} testID="style-defaulted">
+              Style: {generatedDrive.style.join(' + ')} (default)
+            </Text>
+          ) : null}
+
           <View style={styles.optionRow} accessibilityRole="tablist">
             {generatedDrive.options.map((option) => {
               const selected = option.rank === selectedOption.rank;
@@ -192,7 +209,11 @@ export default function DiscoveryScreen() {
                 >
                   <Text style={styles.optionTitle}>Option {option.rank}</Text>
                   <Text style={styles.optionSummary}>
-                    {formatRouteSummary(option.distance_km, option.duration_min)}
+                    {option.duration_min} min · +{option.extra_min} min ·{' '}
+                    {formatRouteSummary(option.distance_km)}
+                  </Text>
+                  <Text style={styles.optionMatch}>
+                    Match {option.match_pct === null ? '—' : `${option.match_pct}%`}
                   </Text>
                 </Pressable>
               );
@@ -209,12 +230,11 @@ export default function DiscoveryScreen() {
 
           <View style={styles.scoreRow}>
             <View style={styles.scoreCard}>
-              <Text style={styles.scoreLabel}>DISTANCE · TIME</Text>
+              <Text style={styles.scoreLabel}>DURATION · EXTRA · DISTANCE</Text>
               <Text style={styles.scoreValue} testID="text-route-distance">
-                {formatRouteSummary(
-                  selectedOption.distance_km,
-                  selectedOption.duration_min,
-                )}
+                {selectedOption.duration_min} min · +
+                {selectedOption.extra_min} min ·{' '}
+                {formatRouteSummary(selectedOption.distance_km)}
               </Text>
             </View>
             <View style={styles.scoreCard}>
@@ -230,13 +250,14 @@ export default function DiscoveryScreen() {
           {breakdownEntries.length ? (
             <View style={styles.breakdown} testID="route-breakdown">
               <Text style={styles.breakdownTitle}>SCORE BREAKDOWN</Text>
-              {breakdownEntries.map(([label, value], index) => (
+              {breakdownEntries.map(([label, fastestScore, optionScore], index) => (
                 <View key={`${label}-${index}`} style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>{String(label)}</Text>
+                  <Text style={styles.breakdownLabel}>
+                    {String(label).charAt(0).toUpperCase()}{String(label).slice(1)}
+                  </Text>
                   <Text style={styles.breakdownValue}>
-                    {typeof value === 'object' && value !== null
-                      ? JSON.stringify(value)
-                      : String(value)}
+                    {fastestScore === undefined ? '—' : `${fastestScore}%`} to{' '}
+                    {optionScore === undefined ? '—' : `${optionScore}%`}
                   </Text>
                 </View>
               ))}

@@ -1,16 +1,16 @@
 import { describe, expect, it } from '@jest/globals';
-import { formatDuration } from './TripDurationSlider';
+import { formatExtraTime } from './TripDurationSlider';
 
-describe('formatDuration', () => {
+describe('formatExtraTime', () => {
   it.each([
-    [0, '0 minutes'],
-    [30, '30 minutes'],
-    [60, '1 hour'],
-    [90, '1 hour 30 minutes'],
-    [120, '2 hours'],
-    [135, '2 hours 15 minutes'],
-    [300, '5 hours'],
+    [0, 'No detour'],
+    [15, '+15 min'],
+    [45, '+45 min'],
+    [60, '+1 h'],
+    [75, '+1 h 15 min'],
+    [120, '+2 h'],
+    [300, '+5 h'],
   ])('formats %i minutes as %s', (minutes, expected) => {
-    expect(formatDuration(minutes)).toBe(expected);
+    expect(formatExtraTime(minutes)).toBe(expected);
   });
 });

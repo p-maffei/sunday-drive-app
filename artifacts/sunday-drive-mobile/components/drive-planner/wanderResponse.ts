@@ -1,18 +1,19 @@
 import type { FeatureCollection, Geometry } from 'geojson';
 import type {
+  FastestRoute,
   RouteBreakdown,
   WanderOption,
   WanderWaypoint,
 } from './RouteResultContext';
 
 export interface WanderResponse {
+  fastest: FastestRoute;
+  extra_min: number;
   budget_min: number;
+  style: string[];
+  style_defaulted: boolean;
   note: string | null;
   options: WanderOption[];
-}
-
-export function clampWanderBudget(minutes: number) {
-  return Math.max(15, Math.min(300, minutes));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -38,25 +39,68 @@ function isWaypoint(value: unknown): value is WanderWaypoint | null {
   );
 }
 
+function isScoreRecord(value: unknown): value is RouteBreakdown {
+  return (
+    isRecord(value) &&
+    Object.values(value).every((score) => typeof score === 'number')
+  );
+}
+
+function isFastestRoute(value: unknown): value is FastestRoute {
+  return (
+    isRecord(value) &&
+    typeof value.duration_min === 'number' &&
+    typeof value.distance_km === 'number' &&
+    isScoreRecord(value.scores) &&
+    isFeatureCollection(value.geojson)
+  );
+}
+
 function isWanderOption(value: unknown): value is WanderOption {
   return (
     isRecord(value) &&
     typeof value.rank === 'number' &&
     isWaypoint(value.waypoint) &&
+    typeof value.extra_min === 'number' &&
     typeof value.distance_km === 'number' &&
     typeof value.duration_min === 'number' &&
     (value.match_pct === null || typeof value.match_pct === 'number') &&
-    isRecord(value.breakdown) &&
+    isScoreRecord(value.breakdown) &&
     typeof value.fun_km === 'number' &&
     typeof value.reused_km === 'number' &&
     isFeatureCollection(value.geojson)
   );
 }
 
+export function parseFastestResponse(payload: unknown): FastestRoute {
+  if (
+    !isRecord(payload) ||
+    typeof payload.fastest_min !== 'number' ||
+    typeof payload.distance_km !== 'number' ||
+    !isScoreRecord(payload.scores) ||
+    !isFeatureCollection(payload.geojson)
+  ) {
+    throw new Error('The route service returned an incomplete fastest route.');
+  }
+
+  return {
+    duration_min: payload.fastest_min,
+    distance_km: payload.distance_km,
+    breakdown: payload.scores,
+    match_pct: null,
+    geojson: payload.geojson,
+  };
+}
+
 export function parseWanderResponse(payload: unknown): WanderResponse {
   if (
     !isRecord(payload) ||
+    !isFastestRoute(payload.fastest) ||
+    typeof payload.extra_min !== 'number' ||
     typeof payload.budget_min !== 'number' ||
+    !Array.isArray(payload.style) ||
+    !payload.style.every((item) => typeof item === 'string') ||
+    typeof payload.style_defaulted !== 'boolean' ||
     (payload.note !== null && typeof payload.note !== 'string') ||
     !Array.isArray(payload.options) ||
     payload.options.length < 1 ||

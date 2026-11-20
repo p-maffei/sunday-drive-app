@@ -1,5 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
-import { clampWanderBudget, parseWanderResponse } from './wanderResponse';
+import {
+  parseFastestResponse,
+  parseWanderResponse,
+} from './wanderResponse';
 
 const routeGeoJSON = {
   type: 'FeatureCollection',
@@ -14,13 +17,23 @@ const routeGeoJSON = {
 };
 
 const validResponse = {
+  fastest: {
+    duration_min: 100,
+    distance_km: 20,
+    scores: { curvy: 31, backroads: 40, urban: 12 },
+    geojson: routeGeoJSON,
+  },
+  extra_min: 20,
   budget_min: 120,
+  style: ['curvy', 'backroads'],
+  style_defaulted: false,
   note: 'A little extra time for the hills.',
   options: [{
     rank: 1,
     waypoint: { lon: -118.63, lat: 34.05 },
     distance_km: 24,
     duration_min: 120,
+    extra_min: 20,
     match_pct: 82,
     breakdown: { curvy: 82 },
     fun_km: 16,
@@ -30,12 +43,6 @@ const validResponse = {
 };
 
 describe('parseWanderResponse', () => {
-  it('clamps time budgets to the API-supported range', () => {
-    expect(clampWanderBudget(0)).toBe(15);
-    expect(clampWanderBudget(120)).toBe(120);
-    expect(clampWanderBudget(420)).toBe(300);
-  });
-
   it('accepts a valid wander response with a waypoint and route GeoJSON', () => {
     expect(parseWanderResponse(validResponse)).toEqual(validResponse);
   });
@@ -74,5 +81,28 @@ describe('parseWanderResponse', () => {
     expect(() =>
       parseWanderResponse({ ...validResponse, options: [invalidOption] }),
     ).toThrow('incomplete route');
+  });
+});
+
+describe('parseFastestResponse', () => {
+  it('converts the fastest endpoint payload to a route result', () => {
+    expect(parseFastestResponse({
+      fastest_min: 28,
+      distance_km: 28,
+      scores: { curvy: 31, backroads: 40, urban: 12 },
+      geojson: routeGeoJSON,
+    })).toEqual({
+      duration_min: 28,
+      distance_km: 28,
+      breakdown: { curvy: 31, backroads: 40, urban: 12 },
+      match_pct: null,
+      geojson: routeGeoJSON,
+    });
+  });
+
+  it('rejects incomplete fastest-route responses', () => {
+    expect(() => parseFastestResponse({ fastest_min: 28 })).toThrow(
+      'incomplete fastest route',
+    );
   });
 });

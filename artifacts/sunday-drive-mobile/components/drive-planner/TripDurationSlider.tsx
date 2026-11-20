@@ -11,22 +11,17 @@ import {
   displayFontFamily,
 } from '@/constants/designTokens';
 
-const MAX_DURATION_MINUTES = 300;
+const MAX_EXTRA_MINUTES = 300;
 const THUMB_SIZE = 22;
 
-export function formatDuration(minutes: number): string {
-  if (minutes === 0) return '0 minutes';
+export function formatExtraTime(minutes: number): string {
+  if (minutes === 0) return 'No detour';
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  const parts: string[] = [];
-
-  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
-  if (remainingMinutes > 0) {
-    parts.push(
-      `${remainingMinutes} ${remainingMinutes === 1 ? 'minute' : 'minutes'}`,
-    );
+  if (hours > 0) {
+    return `+${hours} h${remainingMinutes ? ` ${remainingMinutes} min` : ''}`;
   }
-  return parts.join(' ');
+  return `+${remainingMinutes} min`;
 }
 
 interface TripDurationSliderProps {
@@ -41,14 +36,15 @@ export default function TripDurationSlider({
   const [width, setWidth] = useState(0);
   const ratio = Math.max(
     0,
-    Math.min(1, durationMinutes / MAX_DURATION_MINUTES),
+    Math.min(1, durationMinutes / MAX_EXTRA_MINUTES),
   );
   const usableWidth = Math.max(0, width - THUMB_SIZE);
 
   function setFromPosition(x: number) {
     if (usableWidth === 0) return;
     const clamped = Math.max(0, Math.min(usableWidth, x - THUMB_SIZE / 2));
-    onChange(Math.round((clamped / usableWidth) * MAX_DURATION_MINUTES));
+    const minuteValue = (clamped / usableWidth) * MAX_EXTRA_MINUTES;
+    onChange(Math.round(minuteValue / 15) * 15);
   }
 
   const responder = useMemo(
@@ -129,29 +125,29 @@ export default function TripDurationSlider({
     nativeEvent: { actionName: string };
   }) {
     if (event.nativeEvent.actionName === 'increment') {
-      onChange(Math.min(MAX_DURATION_MINUTES, durationMinutes + 1));
+      onChange(Math.min(MAX_EXTRA_MINUTES, durationMinutes + 15));
     } else if (event.nativeEvent.actionName === 'decrement') {
-      onChange(Math.max(0, durationMinutes - 1));
+      onChange(Math.max(0, durationMinutes - 15));
     }
   }
 
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.label}>03 / TIME TO WANDER</Text>
+        <Text style={styles.label}>03 / EXTRA TIME TO WANDER</Text>
         <Text style={styles.value} testID="text-drive-duration">
-          {formatDuration(durationMinutes)}
+          {formatExtraTime(durationMinutes)}
         </Text>
       </View>
       <View
         accessible
         accessibilityRole="adjustable"
-        accessibilityLabel="Desired driving duration"
+        accessibilityLabel="Extra time to wander"
         accessibilityValue={{
           min: 0,
-          max: MAX_DURATION_MINUTES,
+          max: MAX_EXTRA_MINUTES,
           now: durationMinutes,
-          text: formatDuration(durationMinutes),
+          text: formatExtraTime(durationMinutes),
         }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={handleAccessibilityAction}
@@ -175,7 +171,7 @@ export default function TripDurationSlider({
         />
       </View>
       <View style={styles.rangeLabels}>
-        <Text style={styles.rangeLabel}>0 hours</Text>
+        <Text style={styles.rangeLabel}>0 min</Text>
         <Text style={styles.rangeLabel}>5 hours</Text>
       </View>
     </View>

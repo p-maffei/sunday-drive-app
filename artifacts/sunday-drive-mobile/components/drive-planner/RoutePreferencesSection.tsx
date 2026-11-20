@@ -8,15 +8,24 @@ import { ROUTE_PREFERENCES, type RoutePreference } from './types';
 
 interface RoutePreferencesSectionProps {
   selected: RoutePreference[];
+  showDefaultHint: boolean;
   onToggle: (preference: RoutePreference) => void;
 }
 
 export default function RoutePreferencesSection({
   selected,
+  showDefaultHint,
   onToggle,
 }: RoutePreferencesSectionProps) {
   const styles = StyleSheet.create({
+    section: { gap: 10 },
     container: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    hint: {
+      color: designTokens.color.mutedForeground,
+      fontFamily: interfaceFontFamily,
+      fontSize: 12,
+      lineHeight: 17,
+    },
     option: {
       minHeight: 40,
       paddingHorizontal: 12,
@@ -41,36 +50,43 @@ export default function RoutePreferencesSection({
   });
 
   return (
-    <View style={styles.container}>
-      {ROUTE_PREFERENCES.map((preference) => {
-        const isSelected = selected.includes(preference.id);
-        return (
-          <Pressable
-            key={preference.id}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: isSelected }}
-            onPress={() => onToggle(preference.id)}
-            style={[styles.option, isSelected && styles.selected]}
-            testID={`preference-${preference.id}`}
-          >
-            {isSelected ? (
-              <Feather
-                name="check"
-                size={13}
-                color={designTokens.color.accentForeground}
-              />
-            ) : null}
-            <Text
-              style={[
-                styles.label,
-                isSelected && { color: designTokens.color.accentForeground },
-              ]}
+    <View style={styles.section}>
+      <View style={styles.container}>
+        {ROUTE_PREFERENCES.map((preference) => {
+          const isSelected = selected.includes(preference.id);
+          return (
+            <Pressable
+              key={preference.id}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: isSelected }}
+              onPress={() => onToggle(preference.id)}
+              style={[styles.option, isSelected && styles.selected]}
+              testID={`preference-${preference.id}`}
             >
-              {preference.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+              {isSelected ? (
+                <Feather
+                  name="check"
+                  size={13}
+                  color={designTokens.color.accentForeground}
+                />
+              ) : null}
+              <Text
+                style={[
+                  styles.label,
+                  isSelected && { color: designTokens.color.accentForeground },
+                ]}
+              >
+                {preference.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {showDefaultHint ? (
+        <Text style={styles.hint} testID="text-default-route-style">
+          Nothing selected: we’ll use curvy and backroads
+        </Text>
+      ) : null}
     </View>
   );
 }
