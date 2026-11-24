@@ -61,6 +61,21 @@ describe('parseWanderResponse', () => {
     expect(parseWanderResponse(response).options).toHaveLength(3);
   });
 
+  it('accepts missing or null edge ids for routes without exportable edges', () => {
+    const options = [
+      { ...validResponse.options[0], waypoint: null },
+      { ...validResponse.options[0], waypoint: null, edge_ids: null },
+    ];
+    for (const option of options) {
+      expect(
+        parseWanderResponse({
+          ...validResponse,
+          options: [option],
+        }).options,
+      ).toHaveLength(1);
+    }
+  });
+
   it('rejects missing, empty, or too many options', () => {
     for (const options of [undefined, [], [1, 2, 3, 4].map((rank) => ({
       ...validResponse.options[0],

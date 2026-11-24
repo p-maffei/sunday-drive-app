@@ -70,6 +70,12 @@ function isWanderOption(value: unknown): value is WanderOption {
     typeof value.distance_km === 'number' &&
     typeof value.duration_min === 'number' &&
     (value.match_pct === null || typeof value.match_pct === 'number') &&
+    (value.edge_ids === undefined ||
+      value.edge_ids === null ||
+      (Array.isArray(value.edge_ids) &&
+        value.edge_ids.every(
+          (edgeId) => typeof edgeId === 'string' || typeof edgeId === 'number',
+        ))) &&
     isScoreRecord(value.breakdown) &&
     typeof value.fun_km === 'number' &&
     typeof value.reused_km === 'number' &&

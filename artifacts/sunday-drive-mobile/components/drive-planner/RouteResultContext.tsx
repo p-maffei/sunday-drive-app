@@ -22,6 +22,7 @@ export interface WanderWaypoint {
 export interface WanderOption extends RouteResult {
   rank: number;
   waypoint: WanderWaypoint | null;
+  edge_ids?: Array<string | number> | null;
   extra_min: number;
   fun_km: number;
   reused_km: number;
